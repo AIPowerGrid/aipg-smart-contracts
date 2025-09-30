@@ -1,0 +1,17 @@
+{
+  "name": "aipg-audit-package",
+  "version": "1.0.0",
+  "description": "Audit package for AI Power Grid smart contracts",
+  "scripts": {
+    "interact": "node scripts/interact-aipg-token.js",
+    "test-emissions": "node scripts/test-emissions-controller.js",
+    "test-gridnft": "node scripts/test-gridnft.js"
+  },
+  "dependencies": {
+    "ethers": "^6.9.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

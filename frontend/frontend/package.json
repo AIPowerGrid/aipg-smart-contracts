@@ -1,0 +1,28 @@
+{
+  "name": "aipg-nft-generator-frontend",
+  "version": "1.0.0",
+  "description": "Interactive frontend for AIPG AI Art NFT generation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "serve": "python -m http.server 8000"
+  },
+  "keywords": [
+    "aipg",
+    "nft",
+    "ai",
+    "art",
+    "blockchain",
+    "comfyui",
+    "metamask"
+  ],
+  "author": "AIPG Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+

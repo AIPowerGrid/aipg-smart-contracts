@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables (NEVER commit these)
+.env
+.env.*
+*.env
+
+# Build outputs
+dist/
+build/
+cache/
+artifacts/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Private keys and secrets (NEVER commit these)
+*.key
+*.pem
+*private*
+*secret*
+
+# Test outputs
+coverage/
+.nyc_output/
