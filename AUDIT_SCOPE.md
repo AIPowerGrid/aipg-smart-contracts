@@ -1,8 +1,8 @@
 # Audit Scope & Priorities
 
-## 🎯 Audit Round 1 - Two Contracts
+## 🎯 Audit Round 1 - Three Contracts
 
-This audit focuses on **TWO contracts only**:
+This audit focuses on **THREE contracts**:
 
 ### 1. AIPGTokenV2 (DEPLOYED)
 
@@ -18,6 +18,13 @@ This is our primary asset token contract currently live on Base Mainnet. This co
 **Priority**: **HIGH - DEPLOYMENT PENDING AUDIT**
 
 This contract manages token emissions and distributes rewards to GPU workers. Will be deployed to Base Mainnet immediately after audit approval.
+
+### 3. BondedWorkerRegistry (PENDING DEPLOYMENT)
+
+**Status**: 🔵 **READY FOR DEPLOYMENT**  
+**Priority**: **HIGH - DEPLOYMENT PENDING AUDIT**
+
+This contract manages bonded worker registration, staking, and slashing mechanisms. Workers stake AIPG tokens to participate in the network. Will be deployed to Base Mainnet immediately after audit approval.
 
 ---
 
@@ -92,6 +99,51 @@ This contract manages token emissions and distributes rewards to GPU workers. Wi
 
 ---
 
+## 📋 BondedWorkerRegistry - Audit Focus
+
+### Key Areas to Audit:
+1. **Access Control & Roles**
+   - ADMIN_ROLE management
+   - EMISSIONS_CONTROLLER_ROLE for reward tracking
+   - Emergency pause controls
+   
+2. **Staking Mechanism**
+   - Worker registration and staking
+   - Minimum/maximum stake enforcement
+   - Stake withdrawal process
+   - Emergency unstaking scenarios
+   
+3. **Slashing System**
+   - Slash amount calculation and limits
+   - Slashing authorization controls
+   - Slashed funds distribution to treasury
+   - Protection against excessive slashing
+   
+4. **Worker Management**
+   - Worker activation/deactivation
+   - Model support registration
+   - Worker ID to address mapping
+   - Off-chain worker ID validation
+   
+5. **Economic Security**
+   - Stake-to-reward ratio
+   - Slashing penalties vs network security
+   - Minimum stake requirements
+   - Worker incentive alignment
+   
+6. **Token Handling**
+   - Safe AIPG token transfers
+   - Reentrancy protection on stake/unstake
+   - Emergency token recovery
+   - Slashed token distribution
+
+### Integration Requirements:
+- Requires AIPG token approval from workers
+- Called by EmissionsControllerV2 for reward tracking
+- Interacts with AIPGTokenV2 for staking
+
+---
+
 ## 📚 Additional Contracts (For Reference Only)
 
 **Status**: 🟡 **NOT PART OF THIS AUDIT**  
@@ -108,20 +160,21 @@ The following contracts are included in this repository for context and future a
 
 ## 📝 Audit Deliverables Requested
 
-### For Both Contracts (AIPGTokenV2 + EmissionsControllerV2):
+### For All Three Contracts (AIPGTokenV2 + EmissionsControllerV2 + BondedWorkerRegistry):
 - [ ] Full security audit report with executive summary
 - [ ] Critical/High/Medium/Low severity findings with remediation steps
 - [ ] Gas optimization recommendations
 - [ ] Access control analysis for all roles
-- [ ] Economic security review (tokenomics, emissions schedule)
+- [ ] Economic security review (tokenomics, emissions schedule, staking economics)
 - [ ] EIP-712 signature implementation review
-- [ ] Integration security between the two contracts
+- [ ] Integration security between all three contracts
+- [ ] Slashing mechanism security analysis
 - [ ] Test coverage recommendations
 - [ ] Deployment checklist and recommendations
 
 ### Timeline:
 - **Target**: Complete audit within 2-4 weeks
-- **Deployment**: EmissionsControllerV2 deployed immediately after approval
+- **Deployment**: EmissionsControllerV2 and BondedWorkerRegistry deployed immediately after approval
 - [ ] Recommendations for improvement before mainnet deployment
 
 ## Testing Information
