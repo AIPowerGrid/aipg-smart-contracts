@@ -2,7 +2,7 @@
 
 Open-source smart contracts for the AI Power Grid decentralized GPU network.
 
-## 🎯 Deployed Contracts
+## Deployed Contracts
 
 **AIPGTokenV2** - ERC20 token on Base Mainnet  
 Address: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`  
@@ -10,7 +10,7 @@ Address: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`
 
 **Status**: Production (Base Mainnet) | Other contracts on testnet
 
-## 📋 Contents
+## Contents
 
 - `contracts/` - Solidity smart contracts
 - `docs/` - Deployment addresses and comprehensive documentation
@@ -21,14 +21,8 @@ Address: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`
 - `MANIFEST.md` - Package contents summary
 - `package.json` - Node.js dependencies (ethers v6)
 
-## 🔒 Security
 
-- ✅ Audited contracts (AIPGTokenV2 on mainnet)
-- ✅ No private keys or secrets in repository
-- ✅ All deployed contracts verified on BaseScan
-- ⚠️ Other contracts are testnet-only (not yet audited)
-
-## 📖 Read First
+## Read First
 
 1. **AUDIT_SCOPE.md** - Understand what to focus on
 2. **docs/ADDRESSES.md** - Deployment addresses
@@ -38,7 +32,7 @@ Address: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`
 6. **sdk/README.md** - SDK documentation and usage
 7. **examples/README.md** - Reference implementations
 
-## 🛠️ Testing Scripts
+## Testing Scripts
 
 Install dependencies:
 ```bash
