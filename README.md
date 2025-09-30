@@ -50,18 +50,18 @@ node scripts/interact-aipg-token.js mainnet 0xYourAddress
 
 See `scripts/README.md` for detailed usage instructions.
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please:
 1. Open an issue for bugs or feature requests
 2. Submit pull requests for improvements
 3. Follow existing code style and patterns
 
-## 📜 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details
 
-## 🔗 Links
+## Links
 
 - [Website](https://aipowergrid.io)
 - [Documentation](https://docs.aipowergrid.io)
