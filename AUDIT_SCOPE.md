@@ -1,12 +1,12 @@
 # Audit Scope & Priorities
 
-## 🎯 Audit Round 1 - Two Contracts
+## Audit Round 1 - Two Contracts
 
 This audit focuses on **TWO contracts**:
 
 ### 1. AIPGTokenV2 (DEPLOYED)
 
-**Status**: ✅ **DEPLOYED TO BASE MAINNET**  
+**Status**: - **DEPLOYED TO BASE MAINNET**  
 **Address**: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`  
 **Priority**: **CRITICAL - PRODUCTION CONTRACT**
 
@@ -14,14 +14,14 @@ This is our primary asset token contract currently live on Base Mainnet. This co
 
 ### 2. EmissionsControllerV2 (PENDING DEPLOYMENT)
 
-**Status**: 🔵 **READY FOR DEPLOYMENT**  
+**Status**: - **READY FOR DEPLOYMENT**  
 **Priority**: **HIGH - DEPLOYMENT PENDING AUDIT**
 
 This contract manages token emissions and distributes rewards to GPU workers. Will be deployed to Base Mainnet immediately after audit approval.
 
 ---
 
-## 📋 AIPGTokenV2 - Audit Focus
+## AIPGTokenV2 - Audit Focus
 
 ### Key Areas to Audit:
 1. **Access Control & Roles**
@@ -50,7 +50,7 @@ This contract manages token emissions and distributes rewards to GPU workers. Wi
 
 ---
 
-## 📋 EmissionsControllerV2 - Audit Focus
+## EmissionsControllerV2 - Audit Focus
 
 ### Key Areas to Audit:
 1. **Access Control & Roles**
