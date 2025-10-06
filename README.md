@@ -25,12 +25,14 @@ Address: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`
 ## Read First
 
 1. **AUDIT_SCOPE.md** - Understand what to focus on
-2. **docs/ADDRESSES.md** - Deployment addresses
-3. **contracts/AIPGTokenV2.sol** - Primary audit target
-4. **docs/EMISSIONS_CONTROLLER.md** - EmissionsControllerV2 overview (testnet)
-5. **docs/GRIDNFT.md** - GridNFT system overview (testnet)
-6. **sdk/README.md** - SDK documentation and usage
-7. **examples/README.md** - Reference implementations
+2. **docs/TOKENOMICS_AND_ECONOMICS.md** - Economic model and payment flows
+3. **docs/NFT_SYSTEM_EXPLAINED.md** - NFT construction and utility (non-technical)
+4. **docs/ADDRESSES.md** - Deployment addresses
+5. **contracts/AIPGTokenV2.sol** - Primary audit target
+6. **docs/EMISSIONS_CONTROLLER.md** - EmissionsControllerV2 overview (testnet)
+7. **docs/GRIDNFT.md** - GridNFT system overview (testnet)
+8. **sdk/README.md** - SDK documentation and usage
+9. **examples/README.md** - Reference implementations
 
 ## Testing Scripts
 
@@ -48,7 +50,15 @@ node scripts/interact-aipg-token.js
 node scripts/interact-aipg-token.js mainnet 0xYourAddress
 ```
 
-See `scripts/README.md` for detailed usage instructions.
+Test EmissionsController integration (after deployment):
+```bash
+# Verify roles, configuration, and vault integration
+export EMISSIONS_CONTROLLER_ADDRESS=<address>
+export STAKING_VAULT_ADDRESS=<address>
+node scripts/test-emissions-integration.js
+```
+
+See `scripts/README.md` for detailed usage instructions and `docs/DEPLOYMENT_CHECKLIST.md` for deployment steps.
 
 ## Contributing
 

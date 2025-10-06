@@ -112,6 +112,7 @@ contract StakingVault is AccessControl, ReentrancyGuard, Pausable, IStakingVault
     function notifyRewardAmount(uint256 reward)
         external
         onlyRole(REWARD_DISTRIBUTOR_ROLE)
+        whenNotPaused
         updateReward(address(0))
     {
         require(reward > 0, "reward=0");
@@ -158,7 +159,7 @@ contract StakingVault is AccessControl, ReentrancyGuard, Pausable, IStakingVault
         }
     }
 
-    function exit() external {
+    function exit() external nonReentrant {
         withdraw(balances[msg.sender]);
         getReward();
     }

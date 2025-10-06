@@ -29,7 +29,7 @@ const framework = new NFTGenerationFramework({
   gridAPIUrl: 'https://api.aipowergrid.io/api',
   gridAPIKey: 'your-api-key',
   provider: ethersProvider,
-  modelShopAddress: '0xYourModelShopAddress',
+  modelRegistryAddress: '0xYourModelRegistryAddress',
   templatePath: 'workflow_template.json'
 });
 
@@ -71,14 +71,14 @@ Shows:
 - Generating identical output
 - Verifying reproducibility
 
-#### test-modelshop-end-to-end.js
-End-to-end test of the ModelShop constraint system.
+#### test-modelregistry-sdk.js
+End-to-end test of the ModelRegistry SDK.
 
 Shows:
-- Registering AI models
-- Setting parameter constraints
-- Validating generation parameters
-- Querying model information
+- Initializing ModelRegistry SDK
+- Querying available models
+- Retrieving model hashes
+- Reading model metadata
 
 ## 🔧 Installation
 
