@@ -49,7 +49,7 @@ contract EmissionsControllerV2 is AccessControl, ReentrancyGuard, Pausable, EIP7
 
     // ============ EIP-712 ============
     // keccak256("WorkerClaim(address worker,uint256 hoursWorked,uint256 nonce,uint256 deadline)")
-    bytes32 private constant WORKER_CLAIM_TYPEHASH = 0x2a63a7f17e42d1b3da4d3c1dadbaf2f33a4a3d0d2f7a8939c8f4f1a0b5f9b2b6;
+    bytes32 private constant WORKER_CLAIM_TYPEHASH = 0xaf951ae13436754b4e70e550c82e28aab8397a6632b944a5e339bab92dc4e38f;
     mapping(address => uint256) public nonces; // worker => nonce
 
     // ============ EVENTS ============
