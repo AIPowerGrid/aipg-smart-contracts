@@ -11,29 +11,35 @@ interface IExecutionAdapter {
      * @notice Open a long BTC position
      * @param collateral Amount of USDC to use as collateral
      * @param leverage Leverage multiplier (e.g., 2e18 = 2x)
+     * @param priceUpdateData Pyth price update data (for Avantis)
      * @return positionId Unique identifier for the position
      */
-    function openLong(uint256 collateral, uint256 leverage) 
+    function openLong(uint256 collateral, uint256 leverage, bytes calldata priceUpdateData) 
         external 
+        payable
         returns (bytes32 positionId);
     
     /**
      * @notice Open a short BTC position
      * @param collateral Amount of USDC to use as collateral
      * @param leverage Leverage multiplier (e.g., 2e18 = 2x)
+     * @param priceUpdateData Pyth price update data (for Avantis)
      * @return positionId Unique identifier for the position
      */
-    function openShort(uint256 collateral, uint256 leverage) 
+    function openShort(uint256 collateral, uint256 leverage, bytes calldata priceUpdateData) 
         external 
+        payable
         returns (bytes32 positionId);
     
     /**
      * @notice Close the current position
      * @param positionId Position to close
+     * @param priceUpdateData Pyth price update data (for Avantis)
      * @return pnl Profit/loss in USDC (can be negative)
      */
-    function closePosition(bytes32 positionId) 
+    function closePosition(bytes32 positionId, bytes calldata priceUpdateData) 
         external 
+        payable
         returns (int256 pnl);
     
     /**
