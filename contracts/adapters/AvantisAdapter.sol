@@ -12,9 +12,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev Integrates with Avantis DEX for BTC perpetuals trading
  * 
  * DEPLOYED TO BASE MAINNET
- * Address: 0xC0DC344434A048b83a57D07b6adD9744c956f526
- * Explorer: https://basescan.org/address/0xC0DC344434A048b83a57D07b6adD9744c956f526
- * Deployed: November 9, 2025 (v6 - Full Pyth oracle integration)
+ * Address: 0x1A1A6791cB54aCE3924F90563f5B2AD4F7f03387
+ * Explorer: https://basescan.org/address/0x1A1A6791cB54aCE3924F90563f5B2AD4F7f03387
+ * Deployed: November 9, 2025 (v7 - Removed manual Pyth calls, Avantis handles internally)
+ * 
+ * Key Changes in v7:
+ * - Removed manual PriceAggregator.updatePriceFeeds() calls
+ * - Avantis handles Pyth oracle updates internally
+ * - Simply forward ETH for execution fees
+ * - priceUpdateData parameter kept for interface compatibility but unused
  * 
  * Avantis Protocol Addresses:
  * - Trading: 0x44914408af82bC9983bbb330e3578E1105e11d4e
@@ -89,7 +95,7 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     /**
      * @notice Open a long BTC position on Avantis
      */
-    function openLong(uint256 collateral, uint256 leverage, bytes calldata priceUpdateData) 
+    function openLong(uint256 collateral, uint256 leverage, bytes calldata /* priceUpdateData */) 
         external 
         payable
         override 
@@ -165,19 +171,11 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
             uint256(3e10) // 3% slippage (in 10^10 precision)
         );
         
-        // Update Pyth price feeds if data provided
-        if (priceUpdateData.length > 0) {
-            bytes[] memory priceData = new bytes[](1);
-            priceData[0] = priceUpdateData;
-            (bool priceSuccess, ) = PRICE_AGGREGATOR.call{value: msg.value / 2}(
-                abi.encodeWithSignature("updatePriceFeeds(bytes[])", priceData)
-            );
-            require(priceSuccess, "Pyth price update failed");
-        }
+        // NOTE: Avantis handles Pyth oracle updates internally
+        // We just need to forward ETH for execution fees
         
-        // Call Avantis Trading contract
-        uint256 tradingFee = priceUpdateData.length > 0 ? msg.value / 2 : getExecutionFee();
-        (bool success, ) = TRADING.call{value: tradingFee}(data);
+        // Call Avantis Trading contract with full msg.value for execution fee
+        (bool success, ) = TRADING.call{value: msg.value}(data);
         require(success, "Avantis openTrade failed");
         
         return positionId;
@@ -186,7 +184,7 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     /**
      * @notice Open a short BTC position on Avantis
      */
-    function openShort(uint256 collateral, uint256 leverage, bytes calldata priceUpdateData) 
+    function openShort(uint256 collateral, uint256 leverage, bytes calldata /* priceUpdateData */) 
         external 
         payable
         override 
@@ -255,19 +253,11 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
             uint256(3e10) // 3% slippage (in 10^10 precision)
         );
         
-        // Update Pyth price feeds if data provided
-        if (priceUpdateData.length > 0) {
-            bytes[] memory priceData = new bytes[](1);
-            priceData[0] = priceUpdateData;
-            (bool priceSuccess, ) = PRICE_AGGREGATOR.call{value: msg.value / 2}(
-                abi.encodeWithSignature("updatePriceFeeds(bytes[])", priceData)
-            );
-            require(priceSuccess, "Pyth price update failed");
-        }
+        // NOTE: Avantis handles Pyth oracle updates internally
+        // We just need to forward ETH for execution fees
         
-        // Call Avantis Trading contract
-        uint256 tradingFee = priceUpdateData.length > 0 ? msg.value / 2 : getExecutionFee();
-        (bool success, ) = TRADING.call{value: tradingFee}(data);
+        // Call Avantis Trading contract with full msg.value for execution fee
+        (bool success, ) = TRADING.call{value: msg.value}(data);
         require(success, "Avantis openTrade failed");
         
         return positionId;
@@ -276,7 +266,7 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     /**
      * @notice Close a position on Avantis
      */
-    function closePosition(bytes32 positionId, bytes calldata priceUpdateData) 
+    function closePosition(bytes32 positionId, bytes calldata /* priceUpdateData */) 
         external 
         payable
         override 
@@ -299,19 +289,12 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
             collateral6Dec
         );
         
-        // Update Pyth price feeds if data provided
-        if (priceUpdateData.length > 0) {
-            bytes[] memory priceData = new bytes[](1);
-            priceData[0] = priceUpdateData;
-            (bool priceSuccess, ) = PRICE_AGGREGATOR.call{value: msg.value / 2}(
-                abi.encodeWithSignature("updatePriceFeeds(bytes[])", priceData)
-            );
-            require(priceSuccess, "Pyth price update failed");
-        }
+        // NOTE: Avantis handles Pyth oracle updates internally
+        // We just need to forward ETH for execution fees
+        // priceUpdateData parameter kept for interface compatibility but not used
         
-        // Call Avantis Trading contract
-        uint256 tradingFee = priceUpdateData.length > 0 ? msg.value / 2 : getExecutionFee();
-        (bool success, ) = TRADING.call{value: tradingFee}(data);
+        // Call Avantis Trading contract with full msg.value for execution fee
+        (bool success, ) = TRADING.call{value: msg.value}(data);
         require(success, "Avantis closeTradeMarket failed");
         
         // Calculate PnL (simplified - Avantis handles this internally)
@@ -387,7 +370,7 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
      * @notice Get execution fee for Avantis trades
      * @dev Increased to 0.001 ETH to ensure sufficient fee
      */
-    function getExecutionFee() internal view returns (uint256) {
+    function getExecutionFee() internal pure returns (uint256) {
         // Use 0.001 ETH to be safe (SDK calculates ~850k gas * gasPrice)
         return 0.001 ether;
     }
