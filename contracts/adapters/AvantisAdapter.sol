@@ -12,14 +12,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev Integrates with Avantis DEX for BTC perpetuals trading
  * 
  * DEPLOYED TO BASE MAINNET
- * Address: 0x1A1A6791cB54aCE3924F90563f5B2AD4F7f03387
- * Explorer: https://basescan.org/address/0x1A1A6791cB54aCE3924F90563f5B2AD4F7f03387
- * Deployed: November 9, 2025 (v7 - Removed manual Pyth calls, Avantis handles internally)
+ * Address: 0xE1b17dB476Cad5B367FD03A5E61ca322bDE099b2
+ * Explorer: https://basescan.org/address/0xE1b17dB476Cad5B367FD03A5E61ca322bDE099b2
+ * Deployed: November 9, 2025 (v8 - FINAL: Calls getPriceFromAggregator for market orders)
  * 
- * Key Changes in v7:
- * - Removed manual PriceAggregator.updatePriceFeeds() calls
- * - Avantis handles Pyth oracle updates internally
- * - Simply forward ETH for execution fees
+ * Key Changes in v8:
+ * - FIXED: Calls getPriceFromAggregator(pairIndex, 0) for market orders
+ * - Sets openPrice correctly (Avantis requires this, not 0)
+ * - No manual Pyth calls (Avantis handles internally)
  * - priceUpdateData parameter kept for interface compatibility but unused
  * 
  * Avantis Protocol Addresses:
@@ -112,8 +112,8 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
         // Approve Trading contract to spend USDC (OpenZeppelin v5 uses forceApprove)
         SafeERC20.forceApprove(usdc, TRADING, collateral6Dec);
         
-        // For MARKET orders, pass 0 - Avantis will fetch price internally
-        uint256 openPrice = 0;
+        // For MARKET orders, fetch current price from Avantis PriceAggregator
+        uint256 openPrice = getPriceFromAggregator(btcPairIndex, 0); // 0 = MARKET order type
         
         // Convert leverage from 18 decimals to 10 decimals (Avantis format)
         uint256 leverage10Dec = (leverage * 1e10) / 1e18;
@@ -201,8 +201,8 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
         // Approve Trading contract (OpenZeppelin v5 uses forceApprove)
         SafeERC20.forceApprove(usdc, TRADING, collateral6Dec);
         
-        // For MARKET orders, pass 0 - Avantis will fetch price internally
-        uint256 openPrice = 0;
+        // For MARKET orders, fetch current price from Avantis PriceAggregator
+        uint256 openPrice = getPriceFromAggregator(btcPairIndex, 0); // 0 = MARKET order type
         uint256 leverage10Dec = (leverage * 1e10) / 1e18;
         uint256 positionSize = (collateral * leverage) / 1e18;
         uint256 tradeIndex = getNextTradeIndex(msg.sender);

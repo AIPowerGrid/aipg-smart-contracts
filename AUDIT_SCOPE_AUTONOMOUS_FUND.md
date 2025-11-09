@@ -10,23 +10,24 @@ This audit focuses on the **Autonomous Fund** system - a smart contract that acc
 
 ## Contracts Under Audit
 
-### 1. AutonomousFund (DEPLOYED - v4)
-**Address**: `0x934b5a80505fEd84c42f48006d159B0d394EA81e`  
+### 1. AutonomousFund (DEPLOYED - v5)
+**Address**: `0xB1d634707554782aC330217329A38E80D03A59B1`  
 **Location**: `contracts/autonomous-fund/AutonomousFund.sol`  
 **Priority**: **CRITICAL**  
-**Version**: v4 (Fixed Avantis integration)
+**Version**: v5 (Final - with working Avantis adapter v8)
 
 Main contract that manages treasury, accepts signals, and enforces risk limits.
 
-### 2. AvantisAdapter (DEPLOYED - v7)
-**Address**: `0x1A1A6791cB54aCE3924F90563f5B2AD4F7f03387`  
+### 2. AvantisAdapter (DEPLOYED - v8)
+**Address**: `0xE1b17dB476Cad5B367FD03A5E61ca322bDE099b2`  
 **Location**: `contracts/adapters/AvantisAdapter.sol`  
 **Priority**: **HIGH**  
-**Version**: v7 (Fixed - Avantis handles Pyth internally)
+**Version**: v8 (FINAL - Calls getPriceFromAggregator)
 
 **Key Features**:
-- Removed manual Pyth price update calls (v6 bug fix)
-- Avantis handles Pyth oracle updates internally
+- **FIXED**: Calls `getPriceFromAggregator(pairIndex, 0)` for market orders
+- Sets `openPrice` correctly (Avantis requires this, SDK does this too)
+- No manual Pyth calls (Avantis handles Pyth internally)
 - Simply forwards ETH for execution fees to Avantis
 - `priceUpdateData` parameter kept for interface compatibility but unused
 - All functions `payable` to accept ETH for execution fees
