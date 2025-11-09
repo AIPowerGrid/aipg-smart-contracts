@@ -11,7 +11,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @notice Adapter for executing trades on Avantis perpetuals on Base
  * @dev Integrates with Avantis DEX for BTC perpetuals trading
  * 
- * Contract addresses (Base Mainnet):
+ * DEPLOYED TO BASE MAINNET
+ * Address: 0xC0DC344434A048b83a57D07b6adD9744c956f526
+ * Explorer: https://basescan.org/address/0xC0DC344434A048b83a57D07b6adD9744c956f526
+ * Deployed: November 9, 2025 (v6 - Full Pyth oracle integration)
+ * 
+ * Avantis Protocol Addresses:
  * - Trading: 0x44914408af82bC9983bbb330e3578E1105e11d4e
  * - TradingStorage: 0x8a311D7048c35985aa31C131B9A13e03a5f7422d
  * - PairStorage: 0x5db3772136e5557EFE028Db05EE95C84D76faEC4
