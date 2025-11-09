@@ -4,9 +4,13 @@ Open-source smart contracts for the AI Power Grid decentralized GPU network.
 
 ## Deployed Contracts
 
-**AIPGTokenV2** - ERC20 token on Base Mainnet  
+**AIPGTokenV2** - ERC20 token (150M supply, minting disabled)  
 Address: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`  
 [View on BaseScan](https://basescan.org/address/0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608)
+
+**StakingVault** - Staking rewards (10M AIPG over 1 year)  
+Address: `0x3ED14A6D5A48614D77f313389611410d38fd8277`  
+[View on BaseScan](https://basescan.org/address/0x3ED14A6D5A48614D77f313389611410d38fd8277)
 
 **Status**: Production (Base Mainnet) | Other contracts on testnet
 
@@ -25,12 +29,12 @@ Address: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`
 ## Read First
 
 1. **AUDIT_SCOPE.md** - Understand what to focus on
-2. **docs/TOKENOMICS_AND_ECONOMICS.md** - Economic model and payment flows
-3. **docs/NFT_SYSTEM_EXPLAINED.md** - NFT construction and utility (non-technical)
-4. **docs/ADDRESSES.md** - Deployment addresses
-5. **contracts/AIPGTokenV2.sol** - Primary audit target
-6. **docs/EMISSIONS_CONTROLLER.md** - EmissionsControllerV2 overview (testnet)
-7. **docs/GRIDNFT.md** - GridNFT system overview (testnet)
+2. **docs/ADDRESSES.md** - Deployment addresses
+3. **docs/STAKING.md** - Staking system documentation (NEW)
+4. **docs/TOKENOMICS_AND_ECONOMICS.md** - Economic model and payment flows
+5. **docs/NFT_SYSTEM_EXPLAINED.md** - NFT construction and utility (non-technical)
+6. **contracts/AIPGTokenV2.sol** - Token contract (minting disabled)
+7. **contracts/StakingVault.sol** - Staking contract (LIVE)
 8. **sdk/README.md** - SDK documentation and usage
 9. **examples/README.md** - Reference implementations
 

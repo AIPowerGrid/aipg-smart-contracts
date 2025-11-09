@@ -1,4 +1,6 @@
-// Active Contract (Base Mainnet): see docs/ADDRESSES.md
+// Active Contract (Base Mainnet): 0x3ED14A6D5A48614D77f313389611410d38fd8277
+// Deployed: 2025-11-01
+// Admin: 0x94A3951e6cC9161B753007Cf5b483d6cEEf04897 (Ledger)
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
@@ -11,10 +13,24 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title StakingVault
- * @dev Synthetix-style staking with per-token reward accrual and external reward funding
- * - Stake/withdraw the staking token (AIPG)
- * - Rewards are notified via notifyRewardAmount() by an authorized distributor (EmissionsController)
- * - Rewards are paid in the rewards token (AIPG) held by this contract
+ * @dev Synthetix-style staking with per-token reward accrual and manual reward funding
+ * 
+ * Users stake AIPG tokens and earn rewards that accrue per-second.
+ * Rewards are funded manually by transferring AIPG to this contract and calling notifyRewardAmount().
+ * 
+ * Key features:
+ * - No lockup period - users can withdraw anytime
+ * - Rewards accrue continuously (per-second)
+ * - Users claim rewards whenever they want
+ * - Admin can pause/unpause staking
+ * - Reward duration configurable (default 7 days)
+ * 
+ * Economics:
+ * - 10M AIPG allocated for staking rewards over 1 year
+ * - ~28.6M AIPG eligible for staking (non-treasury supply)
+ * - Target APY: 35-70% depending on participation
+ * 
+ * No EmissionsController - rewards are funded manually from treasury
  */
 contract StakingVault is AccessControl, ReentrancyGuard, Pausable, IStakingVault {
     using SafeERC20 for IERC20;

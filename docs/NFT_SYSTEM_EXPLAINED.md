@@ -317,3 +317,11 @@ GridNFTs are **functional digital assets** that represent ownership and performa
 
 The system combines blockchain security (immutable ownership) with off-chain flexibility (updatable metadata) to create a dynamic representation of AI infrastructure participation.
 
+
+
+
+
+
+
+
+

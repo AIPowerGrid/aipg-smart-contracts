@@ -87,3 +87,11 @@
 2. **StakingVault** - PASS all automated tools (reentrancy fixed)
 3. **BondedWorkerRegistry** - PASS Mythril, minor reentrancy noted (low risk)
 
+
+
+
+
+
+
+
+

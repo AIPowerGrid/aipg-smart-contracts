@@ -4,8 +4,12 @@
 
 ### Core Audit Materials
 - `contracts/` - All smart contracts with mainnet addresses in headers
+  - `autonomous-fund/` - Autonomous Fund contracts (DEPLOYED)
+  - `adapters/` - Execution adapter contracts (DEPLOYED)
 - `docs/` - Comprehensive documentation and deployment addresses
-- `AUDIT_SCOPE.md` - Detailed audit priorities and scope
+  - `autonomous-fund/` - Autonomous Fund documentation
+- `AUDIT_SCOPE.md` - Detailed audit priorities and scope (Round 1)
+- `AUDIT_SCOPE_AUTONOMOUS_FUND.md` - Autonomous Fund audit scope (Round 2)
 
 ### Supporting Materials
 - `sdk/` - JavaScript SDKs for all contracts (ethers v6)

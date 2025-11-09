@@ -1,5 +1,13 @@
 # Audit Scope & Priorities
 
+## Audit Round 2 - Autonomous Fund
+
+**See**: `AUDIT_SCOPE_AUTONOMOUS_FUND.md` for complete audit scope of the Autonomous Fund system.
+
+The Autonomous Fund contracts are **DEPLOYED TO BASE MAINNET** and are ready for audit.
+
+---
+
 ## Audit Round 1 - Two Contracts
 
 This audit focuses on **TWO contracts**:
