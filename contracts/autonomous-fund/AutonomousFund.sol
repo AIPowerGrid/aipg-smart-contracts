@@ -14,9 +14,9 @@ import "./IExecutionAdapter.sol";
  * @dev Simple contract: signal → verify → execute → track
  * 
  * DEPLOYED TO BASE MAINNET
- * Address: 0xE226De8C7832375957c04d9C68E93370E3Ec45Ca
- * Explorer: https://basescan.org/address/0xE226De8C7832375957c04d9C68E93370E3Ec45Ca
- * Deployed: November 9, 2025 (v3 - Added Pyth oracle integration)
+ * Address: 0x934b5a80505fEd84c42f48006d159B0d394EA81e
+ * Explorer: https://basescan.org/address/0x934b5a80505fEd84c42f48006d159B0d394EA81e
+ * Deployed: November 9, 2025 (v4 - Fixed Avantis adapter, no manual Pyth calls)
  */
 contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;

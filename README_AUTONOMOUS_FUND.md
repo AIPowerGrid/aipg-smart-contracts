@@ -22,8 +22,8 @@ The Autonomous Fund is a smart contract system deployed to **Base Mainnet** that
 
 ## 🔗 Deployed Addresses (Base Mainnet)
 
-- **AutonomousFund**: `0xE226De8C7832375957c04d9C68E93370E3Ec45Ca` (v3)
-- **AvantisAdapter**: `0xC0DC344434A048b83a57D07b6adD9744c956f526` (v6)
+- **AutonomousFund**: `0x934b5a80505fEd84c42f48006d159B0d394EA81e` (v4)
+- **AvantisAdapter**: `0x1A1A6791cB54aCE3924F90563f5B2AD4F7f03387` (v7)
 
 ## 🔍 Key Audit Areas
 
