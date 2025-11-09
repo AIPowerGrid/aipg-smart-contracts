@@ -14,9 +14,14 @@ import "./IExecutionAdapter.sol";
  * @dev Simple contract: signal → verify → execute → track
  * 
  * DEPLOYED TO BASE MAINNET
- * Address: 0xB1d634707554782aC330217329A38E80D03A59B1
- * Explorer: https://basescan.org/address/0xB1d634707554782aC330217329A38E80D03A59B1
- * Deployed: November 9, 2025 (v5 - Final with working Avantis adapter v8)
+ * Address: 0x4De346834C536e1B4Ae47681D4545D655441D253
+ * Explorer: https://basescan.org/address/0x4De346834C536e1B4Ae47681D4545D655441D253
+ * Deployed: November 9, 2025 (v6 - FINAL: Accepts price parameter from off-chain)
+ * 
+ * Key Changes in v6:
+ * - Accepts BTC price as parameter (fetched off-chain from Pyth)
+ * - Passes price to adapter (matches Avantis SDK approach)
+ * - No on-chain price fetching (avoids failed calls)
  */
 contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -87,6 +92,7 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
         Signal signal,
         uint256 size,
         uint256 leverage,
+        uint256 price,
         bytes calldata priceUpdateData
     ) external payable whenNotPaused nonReentrant {
         require(msg.sender == signalSigner, "Unauthorized signal");
@@ -123,7 +129,7 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
             }
             
             // Open new position with all capital
-            _openPosition(newPosition, positionSize, finalLeverage, priceUpdateData);
+            _openPosition(newPosition, positionSize, finalLeverage, price, priceUpdateData);
         }
     }
     
@@ -133,6 +139,7 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
         Position position,
         uint256 size,
         uint256 leverage,
+        uint256 price,
         bytes memory priceUpdateData
     ) internal {
         require(currentPosition == Position.NONE, "Position already open");
@@ -145,9 +152,9 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
         // Call adapter to open position on exchange (forward ETH for execution fee)
         bytes32 positionId;
         if (position == Position.LONG) {
-            positionId = IExecutionAdapter(executionAdapter).openLong{value: msg.value}(size, leverage, priceUpdateData);
+            positionId = IExecutionAdapter(executionAdapter).openLong{value: msg.value}(size, leverage, price, priceUpdateData);
         } else {
-            positionId = IExecutionAdapter(executionAdapter).openShort{value: msg.value}(size, leverage, priceUpdateData);
+            positionId = IExecutionAdapter(executionAdapter).openShort{value: msg.value}(size, leverage, price, priceUpdateData);
         }
         
         // Update state

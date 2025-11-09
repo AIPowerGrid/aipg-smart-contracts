@@ -10,24 +10,25 @@ This audit focuses on the **Autonomous Fund** system - a smart contract that acc
 
 ## Contracts Under Audit
 
-### 1. AutonomousFund (DEPLOYED - v5)
-**Address**: `0xB1d634707554782aC330217329A38E80D03A59B1`  
+### 1. AutonomousFund (DEPLOYED - v6)
+**Address**: `0x4De346834C536e1B4Ae47681D4545D655441D253`  
 **Location**: `contracts/autonomous-fund/AutonomousFund.sol`  
 **Priority**: **CRITICAL**  
-**Version**: v5 (Final - with working Avantis adapter v8)
+**Version**: v6 (FINAL - Accepts price parameter from off-chain)
 
 Main contract that manages treasury, accepts signals, and enforces risk limits.
 
-### 2. AvantisAdapter (DEPLOYED - v8)
-**Address**: `0xE1b17dB476Cad5B367FD03A5E61ca322bDE099b2`  
+### 2. AvantisAdapter (DEPLOYED - v9)
+**Address**: `0x2F252D2D189C7B916A00C524B9EC2b398aB6BF8C`  
 **Location**: `contracts/adapters/AvantisAdapter.sol`  
 **Priority**: **HIGH**  
-**Version**: v8 (FINAL - Calls getPriceFromAggregator)
+**Version**: v9 (FINAL - Accepts price from off-chain, matches SDK)
 
 **Key Features**:
-- **FIXED**: Calls `getPriceFromAggregator(pairIndex, 0)` for market orders
-- Sets `openPrice` correctly (Avantis requires this, SDK does this too)
-- No manual Pyth calls (Avantis handles Pyth internally)
+- **FIXED**: Accepts `openPrice` as parameter (fetched off-chain from Pyth)
+- Removed `getPriceFromAggregator()` call (was failing on-chain)
+- Matches exactly how Avantis Python SDK works
+- Price calculated off-chain: `int(price_data.parsed[0].converted_price * 10**10)`
 - Simply forwards ETH for execution fees to Avantis
 - `priceUpdateData` parameter kept for interface compatibility but unused
 - All functions `payable` to accept ETH for execution fees

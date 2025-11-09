@@ -12,17 +12,18 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev Integrates with Avantis DEX for BTC perpetuals trading
  * 
  * DEPLOYED TO BASE MAINNET
- * Address: 0xE1b17dB476Cad5B367FD03A5E61ca322bDE099b2
- * Explorer: https://basescan.org/address/0xE1b17dB476Cad5B367FD03A5E61ca322bDE099b2
- * Deployed: November 9, 2025 (v8 - FINAL: Calls getPriceFromAggregator for market orders)
+ * Address: 0x2F252D2D189C7B916A00C524B9EC2b398aB6BF8C
+ * Explorer: https://basescan.org/address/0x2F252D2D189C7B916A00C524B9EC2b398aB6BF8C
+ * Deployed: November 9, 2025 (v9 - FINAL: Accepts price from off-chain, matches SDK)
  * 
- * Key Changes in v8:
- * - FIXED: Calls getPriceFromAggregator(pairIndex, 0) for market orders
- * - Sets openPrice correctly (Avantis requires this, not 0)
- * - No manual Pyth calls (Avantis handles internally)
+ * Key Changes in v9:
+ * - FIXED: Accepts openPrice as parameter (fetched off-chain from Pyth)
+ * - Removed getPriceFromAggregator() call (was failing)
+ * - Matches exactly how Avantis Python SDK works
+ * - Price fetched off-chain: int(price_data.parsed[0].converted_price * 10**10)
  * - priceUpdateData parameter kept for interface compatibility but unused
  * 
- * Avantis Protocol Addresses:
+ * Avantis Protocol Addresses (Base Mainnet):
  * - Trading: 0x44914408af82bC9983bbb330e3578E1105e11d4e
  * - TradingStorage: 0x8a311D7048c35985aa31C131B9A13e03a5f7422d
  * - PairStorage: 0x5db3772136e5557EFE028Db05EE95C84D76faEC4
@@ -95,7 +96,7 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     /**
      * @notice Open a long BTC position on Avantis
      */
-    function openLong(uint256 collateral, uint256 leverage, bytes calldata /* priceUpdateData */) 
+    function openLong(uint256 collateral, uint256 leverage, uint256 openPrice, bytes calldata /* priceUpdateData */) 
         external 
         payable
         override 
@@ -104,6 +105,7 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
         require(collateral > 0, "Invalid collateral");
         require(leverage >= 1e18 && leverage <= 100e18, "Invalid leverage"); // Avantis supports up to 100x
         require(btcPairIndex > 0, "BTC pair index not set");
+        require(openPrice > 0, "Invalid price");
         
         // Transfer USDC from caller (Avantis uses 6 decimals for USDC)
         uint256 collateral6Dec = collateral / 1e12; // Convert from 18 to 6 decimals
@@ -111,9 +113,6 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
         
         // Approve Trading contract to spend USDC (OpenZeppelin v5 uses forceApprove)
         SafeERC20.forceApprove(usdc, TRADING, collateral6Dec);
-        
-        // For MARKET orders, fetch current price from Avantis PriceAggregator
-        uint256 openPrice = getPriceFromAggregator(btcPairIndex, 0); // 0 = MARKET order type
         
         // Convert leverage from 18 decimals to 10 decimals (Avantis format)
         uint256 leverage10Dec = (leverage * 1e10) / 1e18;
@@ -184,7 +183,7 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     /**
      * @notice Open a short BTC position on Avantis
      */
-    function openShort(uint256 collateral, uint256 leverage, bytes calldata /* priceUpdateData */) 
+    function openShort(uint256 collateral, uint256 leverage, uint256 openPrice, bytes calldata /* priceUpdateData */) 
         external 
         payable
         override 
@@ -193,6 +192,7 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
         require(collateral > 0, "Invalid collateral");
         require(leverage >= 1e18 && leverage <= 100e18, "Invalid leverage");
         require(btcPairIndex > 0, "BTC pair index not set");
+        require(openPrice > 0, "Invalid price");
         
         // Transfer USDC from caller
         uint256 collateral6Dec = collateral / 1e12;
@@ -200,9 +200,6 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
         
         // Approve Trading contract (OpenZeppelin v5 uses forceApprove)
         SafeERC20.forceApprove(usdc, TRADING, collateral6Dec);
-        
-        // For MARKET orders, fetch current price from Avantis PriceAggregator
-        uint256 openPrice = getPriceFromAggregator(btcPairIndex, 0); // 0 = MARKET order type
         uint256 leverage10Dec = (leverage * 1e10) / 1e18;
         uint256 positionSize = (collateral * leverage) / 1e18;
         uint256 tradeIndex = getNextTradeIndex(msg.sender);
@@ -381,14 +378,6 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
      * @param orderType The order type (0=MARKET, 1=STOP_LIMIT, 2=LIMIT, 3=MARKET_ZERO_FEE)
      * @return price The current price in 10^10 precision
      */
-    function getPriceFromAggregator(uint256 pairIndex, uint8 orderType) internal returns (uint256) {
-        // Call PriceAggregator.getPrice(pairIndex, orderType)
-        (bool success, bytes memory data) = PRICE_AGGREGATOR.call(
-            abi.encodeWithSignature("getPrice(uint256,uint8)", pairIndex, orderType)
-        );
-        require(success, "Failed to get price from aggregator");
-        return abi.decode(data, (uint256));
-    }
     
     /**
      * @notice Receive ETH for execution fees

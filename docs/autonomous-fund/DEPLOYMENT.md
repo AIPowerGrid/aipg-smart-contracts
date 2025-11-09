@@ -2,30 +2,32 @@
 
 ## 📋 Deployed Contracts (Base Mainnet)
 
-### AutonomousFund (v5 - **CURRENT**)
-**Address**: `0xB1d634707554782aC330217329A38E80D03A59B1`  
-**Explorer**: https://basescan.org/address/0xB1d634707554782aC330217329A38E80D03A59B1  
+### AutonomousFund (v6 - **CURRENT**)
+**Address**: `0x4De346834C536e1B4Ae47681D4545D655441D253`  
+**Explorer**: https://basescan.org/address/0x4De346834C536e1B4Ae47681D4545D655441D253  
 **Deployed**: November 9, 2025  
 **Network**: Base Mainnet (Chain ID: 8453)  
-**Version**: v5 (Final - with working Avantis adapter v8)
+**Version**: v6 (FINAL - Accepts price parameter from off-chain)
 
 **Configuration**:
 - **USDC**: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` (Base Mainnet USDC)
 - **Signal Signer**: `0xA218db26ed545f3476e6c3E827b595cf2E182533` (Ledger hardware wallet)
-- **Execution Adapter**: `0xE1b17dB476Cad5B367FD03A5E61ca322bDE099b2` (AvantisAdapter v8)
+- **Execution Adapter**: `0x2F252D2D189C7B916A00C524B9EC2b398aB6BF8C` (AvantisAdapter v9)
 - **Max Leverage**: 4x (4e18)
 
-**Key Changes in v5**:
-- ✅ Fixed adapter to work correctly with Avantis (v8 adapter calls getPriceFromAggregator)
-- ✅ `executeSignal()` accepts `bytes calldata priceUpdateData` parameter (interface only)
+**Key Changes in v6**:
+- ✅ FIXED: Accepts BTC `price` as parameter (fetched off-chain from Pyth)
+- ✅ Passes price to adapter (matches Avantis SDK approach)
+- ✅ No on-chain price fetching (avoids failed calls)
+- ✅ `executeSignal(signal, size, leverage, price, priceUpdateData)` signature
 - ✅ Function is `payable` to forward ETH for execution fees
 
-### AvantisAdapter (v8 - **CURRENT**)
-**Address**: `0xE1b17dB476Cad5B367FD03A5E61ca322bDE099b2`  
-**Explorer**: https://basescan.org/address/0xE1b17dB476Cad5B367FD03A5E61ca322bDE099b2  
+### AvantisAdapter (v9 - **CURRENT**)
+**Address**: `0x2F252D2D189C7B916A00C524B9EC2b398aB6BF8C`  
+**Explorer**: https://basescan.org/address/0x2F252D2D189C7B916A00C524B9EC2b398aB6BF8C  
 **Deployed**: November 9, 2025  
 **Network**: Base Mainnet (Chain ID: 8453)  
-**Version**: v8 (FINAL - Calls getPriceFromAggregator)
+**Version**: v9 (FINAL - Accepts price from off-chain, matches SDK)
 
 **Configuration**:
 - **USDC**: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` (Base Mainnet USDC)
@@ -35,19 +37,22 @@
 - **Avantis Multicall**: `0xA7cFc43872F4D7B0E6141ee8c36f1F7FEe5d099e`
 - **Execution Fee**: 0.001 ETH per trade (forwarded to Avantis)
 
-**Key Changes in v8 (FINAL FIX)**:
-- ✅ **FIXED**: Calls `getPriceFromAggregator(pairIndex, 0)` to fetch current BTC price
-- ✅ Sets `openPrice` correctly for market orders (Avantis requires this)
-- ✅ No manual Pyth calls (Avantis handles Pyth internally)
+**Key Changes in v9 (FINAL FIX)**:
+- ✅ **FIXED**: Accepts `openPrice` as parameter (fetched off-chain from Pyth)
+- ✅ Removed `getPriceFromAggregator()` call (was failing with "Failed to get price from aggregator")
+- ✅ Matches exactly how Avantis Python SDK works:
+  - SDK fetches price off-chain: `int(price_data.parsed[0].converted_price * 10**10)`
+  - SDK passes price in `TradeInput.openPrice`
+  - No on-chain price fetching
 - ✅ Simply forwards ETH for execution fees to Avantis
 - ✅ `priceUpdateData` parameter kept for interface compatibility but unused
 - ✅ All functions are `payable` to accept ETH for execution fees
 - ✅ Owner can withdraw ETH for emergency recovery
 
-**Why v7 Failed**:
-- v7 set `openPrice = 0` but Avantis requires the actual price
-- Avantis SDK calls `get_latest_price_updates()` and sets `openPrice` for market orders (line 69-71 in SDK)
-- Transaction reverted with "Avantis openTrade failed"
+**Why v8 Failed**:
+- v8 tried to call `getPriceFromAggregator(pairIndex, 0)` on-chain
+- Reverted with "Failed to get price from aggregator"
+- Avantis SDK doesn't call this function - it fetches price from Pyth HTTP API off-chain
 
 ## 🔗 External Dependencies
 
@@ -85,9 +90,9 @@
 
 ## 📝 Deployment Transactions
 
-1. **AvantisAdapter v8**: `0x63ede2a0ede34ec8eeccea6e0a3d2ee0b5cdd22c2c5fbe2b5632cf4984cd12d0`
-2. **AutonomousFund v5**: `0xe35b0db57f3f8d9816c7fcecde0b3c8c35ad3a8f1f2f4a6d73f6b73e6e8df37c`
-3. **Set Max Leverage (4x)**: `0x0cbed5bbe60b021a40015f51b8e5a7f245d130128a928bdc7ac109996994ddd3`
+1. **AvantisAdapter v9**: `0x17b35d5bd56aa0e21d631c2af2b4d9856b3a37ee5d27fa0b202016e51eb4351f`
+2. **AutonomousFund v6**: `0xed6ec4897a4918220e21e2f4a21baa018f93dbc724ee8385f205adde66e0a6cb`
+3. **Set Max Leverage (4x)**: `0x45751745c0838257b86fc7a2c0ecea809e262a7d8329bbb8fb7c2390902ad1f0`
 
 ## 🧪 Testing
 
