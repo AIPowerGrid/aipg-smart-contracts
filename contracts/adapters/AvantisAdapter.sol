@@ -89,8 +89,9 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     /**
      * @notice Open a long BTC position on Avantis
      */
-    function openLong(uint256 collateral, uint256 leverage) 
+    function openLong(uint256 collateral, uint256 leverage, bytes calldata priceUpdateData) 
         external 
+        payable
         override 
         returns (bytes32 positionId) 
     {
@@ -164,8 +165,19 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
             uint256(3e10) // 3% slippage (in 10^10 precision)
         );
         
+        // Update Pyth price feeds if data provided
+        if (priceUpdateData.length > 0) {
+            bytes[] memory priceData = new bytes[](1);
+            priceData[0] = priceUpdateData;
+            (bool priceSuccess, ) = PRICE_AGGREGATOR.call{value: msg.value / 2}(
+                abi.encodeWithSignature("updatePriceFeeds(bytes[])", priceData)
+            );
+            require(priceSuccess, "Pyth price update failed");
+        }
+        
         // Call Avantis Trading contract
-        (bool success, ) = TRADING.call{value: getExecutionFee()}(data);
+        uint256 tradingFee = priceUpdateData.length > 0 ? msg.value / 2 : getExecutionFee();
+        (bool success, ) = TRADING.call{value: tradingFee}(data);
         require(success, "Avantis openTrade failed");
         
         return positionId;
@@ -174,8 +186,9 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     /**
      * @notice Open a short BTC position on Avantis
      */
-    function openShort(uint256 collateral, uint256 leverage) 
+    function openShort(uint256 collateral, uint256 leverage, bytes calldata priceUpdateData) 
         external 
+        payable
         override 
         returns (bytes32 positionId) 
     {
@@ -242,8 +255,19 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
             uint256(3e10) // 3% slippage (in 10^10 precision)
         );
         
+        // Update Pyth price feeds if data provided
+        if (priceUpdateData.length > 0) {
+            bytes[] memory priceData = new bytes[](1);
+            priceData[0] = priceUpdateData;
+            (bool priceSuccess, ) = PRICE_AGGREGATOR.call{value: msg.value / 2}(
+                abi.encodeWithSignature("updatePriceFeeds(bytes[])", priceData)
+            );
+            require(priceSuccess, "Pyth price update failed");
+        }
+        
         // Call Avantis Trading contract
-        (bool success, ) = TRADING.call{value: getExecutionFee()}(data);
+        uint256 tradingFee = priceUpdateData.length > 0 ? msg.value / 2 : getExecutionFee();
+        (bool success, ) = TRADING.call{value: tradingFee}(data);
         require(success, "Avantis openTrade failed");
         
         return positionId;
@@ -252,8 +276,9 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     /**
      * @notice Close a position on Avantis
      */
-    function closePosition(bytes32 positionId) 
+    function closePosition(bytes32 positionId, bytes calldata priceUpdateData) 
         external 
+        payable
         override 
         returns (int256 pnl) 
     {
@@ -274,8 +299,19 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
             collateral6Dec
         );
         
+        // Update Pyth price feeds if data provided
+        if (priceUpdateData.length > 0) {
+            bytes[] memory priceData = new bytes[](1);
+            priceData[0] = priceUpdateData;
+            (bool priceSuccess, ) = PRICE_AGGREGATOR.call{value: msg.value / 2}(
+                abi.encodeWithSignature("updatePriceFeeds(bytes[])", priceData)
+            );
+            require(priceSuccess, "Pyth price update failed");
+        }
+        
         // Call Avantis Trading contract
-        (bool success, ) = TRADING.call{value: getExecutionFee()}(data);
+        uint256 tradingFee = priceUpdateData.length > 0 ? msg.value / 2 : getExecutionFee();
+        (bool success, ) = TRADING.call{value: tradingFee}(data);
         require(success, "Avantis closeTradeMarket failed");
         
         // Calculate PnL (simplified - Avantis handles this internally)

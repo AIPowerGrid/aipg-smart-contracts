@@ -86,8 +86,9 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
     function executeSignal(
         Signal signal,
         uint256 size,
-        uint256 leverage
-    ) external whenNotPaused nonReentrant {
+        uint256 leverage,
+        bytes calldata priceUpdateData
+    ) external payable whenNotPaused nonReentrant {
         require(msg.sender == signalSigner, "Unauthorized signal");
         
         emit SignalReceived(signal, block.timestamp);
@@ -96,7 +97,7 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
         treasuryBalance = getEffectiveTreasuryBalance();
         
         if (signal == Signal.EXIT) {
-            _closePosition();
+            _closePosition(priceUpdateData);
         } else {
             // Use ALL capital for the trade
             uint256 positionSize = size > 0 
@@ -115,14 +116,14 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
             
             // Close existing position if switching directions or already have position
             if (currentPosition != Position.NONE) {
-                _closePosition();
+                _closePosition(priceUpdateData);
                 // Update treasury after close (includes PnL)
                 treasuryBalance = getEffectiveTreasuryBalance();
                 positionSize = size > 0 ? size : treasuryBalance; // Recalculate with new balance
             }
             
             // Open new position with all capital
-            _openPosition(newPosition, positionSize, finalLeverage);
+            _openPosition(newPosition, positionSize, finalLeverage, priceUpdateData);
         }
     }
     
@@ -131,7 +132,8 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
     function _openPosition(
         Position position,
         uint256 size,
-        uint256 leverage
+        uint256 leverage,
+        bytes memory priceUpdateData
     ) internal {
         require(currentPosition == Position.NONE, "Position already open");
         require(size > 0, "Invalid size");
@@ -140,12 +142,12 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
         // Approve adapter to spend USDC (OpenZeppelin v5 uses forceApprove)
         usdc.forceApprove(executionAdapter, size);
         
-        // Call adapter to open position on exchange
+        // Call adapter to open position on exchange (forward ETH for execution fee)
         bytes32 positionId;
         if (position == Position.LONG) {
-            positionId = IExecutionAdapter(executionAdapter).openLong(size, leverage);
+            positionId = IExecutionAdapter(executionAdapter).openLong{value: msg.value}(size, leverage, priceUpdateData);
         } else {
-            positionId = IExecutionAdapter(executionAdapter).openShort(size, leverage);
+            positionId = IExecutionAdapter(executionAdapter).openShort{value: msg.value}(size, leverage, priceUpdateData);
         }
         
         // Update state
@@ -157,15 +159,15 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
         emit PositionOpened(position, size, leverage, positionId);
     }
     
-    function _closePosition() internal {
+    function _closePosition(bytes memory priceUpdateData) internal {
         require(currentPosition != Position.NONE, "No position to close");
         require(executionAdapter != address(0), "Adapter not set");
         
         Position closedPosition = currentPosition;
         bytes32 positionIdToClose = currentPositionId;
         
-        // Call adapter to close position on exchange
-        int256 pnl = IExecutionAdapter(executionAdapter).closePosition(positionIdToClose);
+        // Call adapter to close position on exchange (forward ETH for execution fee)
+        int256 pnl = IExecutionAdapter(executionAdapter).closePosition{value: msg.value}(positionIdToClose, priceUpdateData);
         
         // Reset position state
         currentPosition = Position.NONE;
@@ -231,7 +233,8 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
      */
     function emergencyClose() external onlyOwner {
         if (currentPosition != Position.NONE) {
-            _closePosition();
+            bytes memory emptyPriceData = new bytes(0);
+            _closePosition(emptyPriceData);
         }
     }
     
@@ -251,13 +254,15 @@ contract AutonomousFund is Ownable, Pausable, ReentrancyGuard {
      * @dev This is the true value of treasury including open position value
      */
     function getEffectiveTreasuryBalance() public view returns (uint256) {
-        uint256 usdcBalance = usdc.balanceOf(address(this));
+        // USDC has 6 decimals, convert to 18 decimals for internal calculations
+        uint256 usdcBalance6Dec = usdc.balanceOf(address(this));
+        uint256 usdcBalance = usdcBalance6Dec * 1e12; // Convert 6 decimals to 18 decimals
         
         // If position is open, add unrealized PnL
         if (currentPosition != Position.NONE && executionAdapter != address(0) && currentPositionId != bytes32(0)) {
             try IExecutionAdapter(executionAdapter).getUnrealizedPnl(currentPositionId) returns (int256 pnl) {
                 if (pnl > 0) {
-                    // Profit increases treasury
+                    // Profit increases treasury (PnL is already in 18 decimals from adapter)
                     return usdcBalance + uint256(pnl);
                 } else if (pnl < 0) {
                     // Loss decreases treasury (but can't go negative)
