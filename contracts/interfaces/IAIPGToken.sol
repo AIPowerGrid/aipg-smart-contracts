@@ -6,3 +6,4 @@ interface IAIPGToken {
     function totalSupply() external view returns (uint256);
 }
 
+

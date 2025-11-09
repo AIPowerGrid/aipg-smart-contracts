@@ -187,3 +187,11 @@ await vault.getReward();
 - **Treasury**: Must be a valid address (preferably multisig)
 - **Off-chain Signer**: Must have SIGNER_ROLE for worker claims
 
+
+
+
+
+
+
+
+

@@ -4,8 +4,14 @@
 
 **AIPGTokenV2**: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`  
 **Status**: LIVE - Primary audit target  
+**Supply**: 150,000,000 AIPG (max cap, minting disabled)  
 **Explorer**: https://basescan.org/address/0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608  
 **RPC**: https://mainnet.base.org
+
+**StakingVault**: `0x3ED14A6D5A48614D77f313389611410d38fd8277`  
+**Status**: LIVE - Staking rewards  
+**Explorer**: https://basescan.org/address/0x3ED14A6D5A48614D77f313389611410d38fd8277  
+**Deployed**: 2025-11-01
 
 ## 🧪 Base Sepolia (TESTNET - NOT PRODUCTION)
 

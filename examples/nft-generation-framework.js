@@ -160,10 +160,6 @@ class NFTGenerationFramework {
   async generateComfyUI(params, label = 'ComfyUI') {
     const workflow = this.paramsToComfyUI(params);
     
-    console.log(`🎨 ${label} generation starting...`);
-    console.log(`- Seed: ${params.seed}`);
-    console.log(`- Steps: ${params.steps}, CFG: ${params.cfgScale}`);
-    console.log(`- Sampler: ${params.sampler}, Scheduler: ${params.scheduler}`);
 
     try {
       const response = await axios.post(`${this.comfyUIEndpoint}/prompt`, {
@@ -171,12 +167,10 @@ class NFTGenerationFramework {
       });
 
       const promptId = response.data.prompt_id;
-      console.log(`✅ ${label} workflow submitted:`, promptId);
 
       const result = await this.pollComfyUI(promptId, label);
       
       if (result && result.length > 0) {
-        console.log(`✅ ${label} completed: ${result[0].filename}`);
         return {
           success: true,
           backend: 'comfyui',
@@ -190,7 +184,6 @@ class NFTGenerationFramework {
       return { success: false, backend: 'comfyui', error: 'No images generated' };
 
     } catch (error) {
-      console.error(`❌ ${label} failed:`, error.message);
       return { success: false, backend: 'comfyui', error: error.message };
     }
   }
@@ -210,12 +203,7 @@ class NFTGenerationFramework {
       gridParams.workers = [targetWorker];
     }
     
-    console.log(`🌐 ${label} generation starting...`);
-    console.log(`- Seed: ${gridParams.params.seed}`);
-    console.log(`- Steps: ${gridParams.params.steps}, CFG: ${gridParams.params.cfg_scale}`);
-    console.log(`- Sampler: ${gridParams.params.sampler_name}`);
     if (targetWorker) {
-      console.log(`- Target worker: ${targetWorker}`);
     }
 
     try {
@@ -229,8 +217,6 @@ class NFTGenerationFramework {
       });
 
       const jobId = response.data.id;
-      console.log(`✅ ${label} job submitted:`, jobId);
-      console.log(`💰 Kudos cost: ${response.data.kudos}`);
 
       if (!jobId) {
         return { success: false, backend: 'grid', error: 'No job ID returned', response: response.data };
@@ -240,7 +226,6 @@ class NFTGenerationFramework {
 
       if (result && result.generations && result.generations.length > 0) {
         const imageUrl = result.generations[0].img;
-        console.log(`✅ ${label} completed: ${imageUrl}`);
         return {
           success: true,
           backend: 'grid',
@@ -254,7 +239,6 @@ class NFTGenerationFramework {
       return { success: false, backend: 'grid', error: 'No images generated', result };
 
     } catch (error) {
-      console.error(`❌ ${label} failed:`, error.message);
       return { 
         success: false, 
         backend: 'grid', 
@@ -268,13 +252,6 @@ class NFTGenerationFramework {
    * Generate via both backends for comparison
    */
   async generateBoth(params) {
-    console.log('🔄 DUAL BACKEND GENERATION TEST\n');
-    console.log('Parameters:');
-    console.log(`- Seed: ${params.seed} (FIXED for reproducibility)`);
-    console.log(`- Prompt: ${params.prompt.substring(0, 50)}...`);
-    console.log(`- Steps: ${params.steps}, CFG: ${params.cfgScale}`);
-    console.log(`- Dimensions: ${params.width}x${params.height}`);
-    console.log();
 
     const results = await Promise.allSettled([
       this.generateComfyUI(params, 'ComfyUI'),
@@ -314,7 +291,6 @@ class NFTGenerationFramework {
     };
 
     fs.writeFileSync(outputFile, JSON.stringify(output, null, 2));
-    console.log(`📁 Results saved to: ${outputFile}`);
     return outputFile;
   }
 
@@ -340,24 +316,20 @@ class NFTGenerationFramework {
             }
             return [];
           } else if (status.status_str === 'error') {
-            console.error(`❌ ${label} generation failed:`, status.messages);
             return null;
           }
         }
 
         if (i % 5 === 0) {
-          console.log(`⏳ ${label} waiting... (${i}/${maxAttempts})`);
         }
 
         await new Promise(resolve => setTimeout(resolve, delay));
 
       } catch (error) {
-        console.log(`⚠️ ${label} polling error:`, error.message);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
 
-    console.log(`⏰ ${label} timed out`);
     return null;
   }
 
@@ -378,24 +350,20 @@ class NFTGenerationFramework {
         if (data.done === true && data.generations && data.generations.length > 0) {
           return data;
         } else if (data.faulted === true) {
-          console.error(`❌ ${label} failed: Generation faulted`);
           return null;
         }
 
         if (i % 5 === 0) {
           const status = data.done ? 'done' : (data.processing > 0 ? 'processing' : 'waiting');
-          console.log(`⏳ ${label} status: ${status}, queue: ${data.queue_position} (${i}/${maxAttempts})`);
         }
 
         await new Promise(resolve => setTimeout(resolve, delay));
 
       } catch (error) {
-        console.log(`⚠️ ${label} polling error:`, error.message);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
 
-    console.log(`⏰ ${label} timed out`);
     return null;
   }
 }
