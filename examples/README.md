@@ -1,113 +1,64 @@
-# Examples and Reference Implementations
+# Examples
 
-This folder contains example scripts and reference implementations for interacting with AI Power Grid contracts.
+Reference implementations for interacting with AIPG contracts.
 
-## 📚 Contents
+## Available Examples
 
-### NFT Generation Framework
-
-**`nft-generation-framework.js`** - Core framework for deterministic AI art generation
-
-A unified framework that ensures pixel-perfect reproducibility across different AI backends:
-- ComfyUI local generation
-- Grid API distributed generation
-- Parameter validation against blockchain constraints
-- Template-based workflow management
-
-**Key Features:**
-- Fetch model constraints from blockchain
-- Validate generation parameters
-- Generate on ComfyUI or Grid API
-- Compare outputs for reproducibility testing
+### read-nft-and-recreate.js
+Read GridNFT metadata from chain and recreate the parameters.
 
 **Usage:**
-```javascript
-const { NFTGenerationFramework } = require('./nft-generation-framework');
-
-const framework = new NFTGenerationFramework({
-  comfyUIEndpoint: 'http://localhost:8188',
-  gridAPIUrl: 'https://api.aipowergrid.io/api',
-  gridAPIKey: 'your-api-key',
-  provider: ethersProvider,
-  modelRegistryAddress: '0xYourModelRegistryAddress',
-  templatePath: 'workflow_template.json'
-});
-
-// Fetch constraints from blockchain
-const constraints = await framework.fetchModelConstraints('flux.1-dev');
-
-// Generate image with parameters
-const result = await framework.generateOnComfyUI({
-  seed: 42,
-  steps: 30,
-  cfg_scale: 7.5,
-  // ... other params
-});
-```
-
-### Example Scripts
-
-**Note**: These scripts are reference examples from the testnet deployment. They require:
-- Base Sepolia testnet access
-- Deployed contract addresses (see `/docs/ADDRESSES.md`)
-- Private keys with test ETH
-- Additional dependencies (axios, fs, etc.)
-
-#### mint-fun-nft-with-forced-params.js
-Example of minting an NFT with complete generation parameters stored on-chain.
-
-Shows:
-- Parameter validation
-- IPFS metadata upload
-- NFT minting with full params
-- Event verification
-
-#### read-nft-and-recreate.js
-Demonstrates reading NFT parameters from blockchain and recreating the exact image.
-
-Shows:
-- Reading on-chain parameters
-- Reconstructing workflow from template
-- Generating identical output
-- Verifying reproducibility
-
-#### test-modelregistry-sdk.js
-End-to-end test of the ModelRegistry SDK.
-
-Shows:
-- Initializing ModelRegistry SDK
-- Querying available models
-- Retrieving model hashes
-- Reading model metadata
-
-## 🔧 Installation
-
-These examples require additional dependencies beyond the base audit package:
-
 ```bash
-npm install ethers@^6.9.0 axios
+node read-nft-and-recreate.js <tokenId>
 ```
 
-## ⚠️ Important Notes
+### nft-generation-framework.js
+Complete framework for generating AI art NFTs with validation.
 
-1. **These are reference examples only** - They demonstrate patterns and usage but are configured for testnet
-2. **Contract addresses are testnet** - Update addresses for mainnet use
-3. **Requires external services** - ComfyUI or Grid API access needed for generation
-4. **Not audited** - These scripts are for reference and testing purposes only
+**Features:**
+- Model selection
+- Parameter validation
+- Recipe integration
+- Error handling
 
-## 🎯 For Auditors
+### mint-fun-nft-with-forced-params.js
+Example for minting NFTs with specific parameters.
 
-These examples demonstrate:
-- How contracts are intended to be used
-- Parameter validation flow
-- Integration patterns
-- Reproducibility verification
+### test-modelregistry-sdk.js
+Test ModelRegistry SDK functionality.
 
-**Focus your audit on the contracts themselves** (`/contracts/` folder), not these example scripts.
+## Quick Start
 
-## 📖 Related Documentation
+1. Review the example script
+2. Install dependencies: `npm install`
+3. Set network configuration
+4. Run the example
 
-- `/docs/GRIDNFT.md` - GridNFT contract documentation
-- `/docs/EMISSIONS_CONTROLLER.md` - EmissionsController documentation  
-- `/sdk/README.md` - SDK documentation
-- `/scripts/README.md` - Interaction scripts for deployed contracts
+## Common Patterns
+
+### Reading Contract Data
+
+```javascript
+const { ethers } = require('ethers');
+
+const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
+const contract = new ethers.Contract(address, abi, provider);
+
+const data = await contract.yourFunction();
+console.log(data);
+```
+
+### Writing Transactions
+
+Requires private key and signer setup. See examples for patterns.
+
+## Networks
+
+- **Base Mainnet**: Chain ID 8453
+- **Base Sepolia**: Chain ID 84532
+
+## Related Documentation
+
+- `/sdk/` - Available SDKs
+- `/docs/` - Complete documentation
+- `/AUDIT_SCOPE.md` - Audit priorities
