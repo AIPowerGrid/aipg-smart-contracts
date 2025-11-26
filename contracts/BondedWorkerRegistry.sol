@@ -17,7 +17,7 @@ contract BondedWorkerRegistry is AccessControl, ReentrancyGuard, Pausable {
 
     // ============ ROLES ============
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    bytes32 public constant EMISSIONS_CONTROLLER_ROLE = keccak256("EMISSIONS_CONTROLLER_ROLE");
+    bytes32 public constant REWARD_MANAGER_ROLE = keccak256("REWARD_MANAGER_ROLE");
 
     // ============ STATE ============
     IERC20 public immutable aipgToken;
@@ -74,8 +74,8 @@ contract BondedWorkerRegistry is AccessControl, ReentrancyGuard, Pausable {
         _;
     }
 
-    modifier onlyEmissionsController() {
-        require(hasRole(EMISSIONS_CONTROLLER_ROLE, msg.sender), "BondedWorkerRegistry: caller is not emissions controller");
+    modifier onlyRewardManager() {
+        require(hasRole(REWARD_MANAGER_ROLE, msg.sender), "BondedWorkerRegistry: caller is not reward manager");
         _;
     }
 
@@ -263,11 +263,11 @@ contract BondedWorkerRegistry is AccessControl, ReentrancyGuard, Pausable {
     // ============ REWARD FUNCTIONS ============
     
     /**
-     * @dev Record job completion and reward (called by EmissionsController)
+     * @dev Record job completion and reward (called by reward manager/treasury)
      * @param worker Worker address
-     * @param rewardAmount AIPG reward amount
+     * @param rewardAmount AIPG reward amount (for tracking - actual transfer happens off-chain or via separate tx)
      */
-    function recordJobCompletion(address worker, uint256 rewardAmount) external onlyEmissionsController {
+    function recordJobCompletion(address worker, uint256 rewardAmount) external onlyRewardManager {
         require(isBondedWorker[worker], "BondedWorkerRegistry: not a bonded worker");
         
         WorkerInfo storage workerInfo = workers[worker];
@@ -276,6 +276,29 @@ contract BondedWorkerRegistry is AccessControl, ReentrancyGuard, Pausable {
         workerInfo.lastActivity = block.timestamp;
 
         emit JobCompleted(worker, rewardAmount);
+    }
+
+    /**
+     * @dev Batch record multiple job completions (gas efficient for multiple workers)
+     * @param workerAddresses Array of worker addresses
+     * @param rewardAmounts Array of reward amounts
+     */
+    function batchRecordJobCompletions(
+        address[] calldata workerAddresses,
+        uint256[] calldata rewardAmounts
+    ) external onlyRewardManager {
+        require(workerAddresses.length == rewardAmounts.length, "BondedWorkerRegistry: arrays length mismatch");
+        
+        for (uint256 i = 0; i < workerAddresses.length; i++) {
+            address worker = workerAddresses[i];
+            if (isBondedWorker[worker]) {
+                WorkerInfo storage workerInfo = workers[worker];
+                workerInfo.totalJobsCompleted += 1;
+                workerInfo.totalRewardsEarned += rewardAmounts[i];
+                workerInfo.lastActivity = block.timestamp;
+                emit JobCompleted(worker, rewardAmounts[i]);
+            }
+        }
     }
 
     /**

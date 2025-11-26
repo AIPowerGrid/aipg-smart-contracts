@@ -1,6 +1,8 @@
-// SPDX-License-Identifier: MIT
+
+
 // Sources flattened with hardhat v2.26.3 https://hardhat.org
 
+// SPDX-License-Identifier: MIT
 
 // File @openzeppelin/contracts/access/IAccessControl.sol@v4.9.6
 
@@ -92,6 +94,8 @@ interface IAccessControl {
      */
     function renounceRole(bytes32 role, address account) external;
 }
+
+
 // File @openzeppelin/contracts/utils/Context.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
@@ -122,6 +126,8 @@ abstract contract Context {
         return 0;
     }
 }
+
+
 // File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
@@ -149,6 +155,8 @@ interface IERC165 {
      */
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
 }
+
+
 // File @openzeppelin/contracts/utils/introspection/ERC165.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
@@ -178,6 +186,8 @@ abstract contract ERC165 is IERC165 {
         return interfaceId == type(IERC165).interfaceId;
     }
 }
+
+
 // File @openzeppelin/contracts/utils/math/Math.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
@@ -519,6 +529,8 @@ library Math {
         }
     }
 }
+
+
 // File @openzeppelin/contracts/utils/math/SignedMath.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
@@ -564,12 +576,16 @@ library SignedMath {
         }
     }
 }
+
+
 // File @openzeppelin/contracts/utils/Strings.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (utils/Strings.sol)
 
 pragma solidity ^0.8.0;
+
+
 /**
  * @dev String operations.
  */
@@ -647,12 +663,18 @@ library Strings {
         return keccak256(bytes(a)) == keccak256(bytes(b));
     }
 }
+
+
 // File @openzeppelin/contracts/access/AccessControl.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (access/AccessControl.sol)
 
 pragma solidity ^0.8.0;
+
+
+
+
 /**
  * @dev Contract module that allows children to implement role-based access
  * control mechanisms. This is a lightweight version that doesn't allow enumerating role
@@ -687,6 +709,7 @@ pragma solidity ^0.8.0;
  * roles. More complex role relationships can be created by using
  * {_setRoleAdmin}.
  *
+ * WARNING: The `DEFAULT_ADMIN_ROLE` is also its own admin: it has permission to
  * grant and revoke this role. Extra precautions should be taken to secure
  * accounts that have been granted it. We recommend using {AccessControlDefaultAdminRules}
  * to enforce additional security measures for this role.
@@ -890,6 +913,8 @@ abstract contract AccessControl is Context, IAccessControl, ERC165 {
         }
     }
 }
+
+
 // File @openzeppelin/contracts/security/Pausable.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
@@ -995,6 +1020,8 @@ abstract contract Pausable is Context {
         emit Unpaused(_msgSender());
     }
 }
+
+
 // File @openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
@@ -1087,6 +1114,8 @@ interface IERC20Permit {
     // solhint-disable-next-line func-name-mixedcase
     function DOMAIN_SEPARATOR() external view returns (bytes32);
 }
+
+
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
@@ -1167,6 +1196,8 @@ interface IERC20 {
      */
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
+
+
 // File @openzeppelin/contracts/utils/Address.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
@@ -1413,12 +1444,16 @@ library Address {
         }
     }
 }
+
+
 // File @openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.3) (token/ERC20/utils/SafeERC20.sol)
 
 pragma solidity ^0.8.0;
+
+
 
 /**
  * @title SafeERC20
@@ -1554,6 +1589,8 @@ library SafeERC20 {
             success && (returndata.length == 0 || abi.decode(returndata, (bool))) && Address.isContract(address(token));
     }
 }
+
+
 // File @openzeppelin/contracts/security/ReentrancyGuard.sol@v4.9.6
 
 // Original license: SPDX_License_Identifier: MIT
@@ -1633,10 +1670,16 @@ abstract contract ReentrancyGuard {
         return _status == _ENTERED;
     }
 }
+
+
 // File contracts_active/BondedWorkerRegistry.sol
 
 // Original license: SPDX_License_Identifier: MIT
 pragma solidity ^0.8.24;
+
+
+
+
 
 /**
  * @title BondedWorkerRegistry
@@ -1758,295 +1801,4 @@ contract BondedWorkerRegistry is AccessControl, ReentrancyGuard, Pausable {
         worker.registrationTime = block.timestamp;
         worker.lastActivity = block.timestamp;
         worker.workerId = workerId;
-        worker.totalJobsCompleted = 0;
-        worker.totalRewardsEarned = 0;
-
-        isBondedWorker[msg.sender] = true;
-        workerIdToAddress[workerId] = msg.sender;
-        allWorkers.push(msg.sender);
-        totalStaked += minimumStake;
-
-        // Update model mappings
-        for (uint256 i = 0; i < supportedModels.length; i++) {
-            modelToWorkers[supportedModels[i]].push(msg.sender);
-        }
-
-        emit WorkerRegistered(msg.sender, minimumStake, supportedModels, workerId);
-    }
-
-    /**
-     * @dev Unregister a bonded worker and withdraw stake
-     */
-    function unregisterBondedWorker() external onlyBondedWorker whenNotPaused nonReentrant {
-        WorkerInfo storage worker = workers[msg.sender];
-        require(worker.isActive, "BondedWorkerRegistry: worker not active");
-
-        uint256 stakeAmount = worker.stakeAmount;
-        
-        // Update state
-        worker.isActive = false;
-        isBondedWorker[msg.sender] = false;
-        totalStaked -= stakeAmount;
-
-        // Remove from model mappings
-        for (uint256 i = 0; i < worker.supportedModels.length; i++) {
-            bytes32 modelHash = worker.supportedModels[i];
-            address[] storage workersForModel = modelToWorkers[modelHash];
-            
-            for (uint256 j = 0; j < workersForModel.length; j++) {
-                if (workersForModel[j] == msg.sender) {
-                    workersForModel[j] = workersForModel[workersForModel.length - 1];
-                    workersForModel.pop();
-                    break;
-                }
-            }
-        }
-
-        // Transfer stake back to worker
-        aipgToken.safeTransfer(msg.sender, stakeAmount);
-
-        emit WorkerUnregistered(msg.sender);
-    }
-
-    // ============ STAKE MANAGEMENT ============
-    
-    /**
-     * @dev Increase stake amount
-     * @param additionalAmount Additional amount to stake
-     */
-    function increaseStake(uint256 additionalAmount) external onlyBondedWorker whenNotPaused nonReentrant {
-        require(additionalAmount > 0, "BondedWorkerRegistry: invalid amount");
-        
-        WorkerInfo storage worker = workers[msg.sender];
-        uint256 newTotal = worker.stakeAmount + additionalAmount;
-        require(newTotal <= maximumStake, "BondedWorkerRegistry: exceeds maximum stake");
-
-        // Transfer additional stake
-        aipgToken.safeTransferFrom(msg.sender, address(this), additionalAmount);
-
-        // Update state
-        worker.stakeAmount = newTotal;
-        totalStaked += additionalAmount;
-
-        emit StakeIncreased(msg.sender, additionalAmount);
-    }
-
-    /**
-     * @dev Decrease stake amount (partial withdrawal)
-     * @param decreaseAmount Amount to withdraw
-     */
-    function decreaseStake(uint256 decreaseAmount) external onlyBondedWorker whenNotPaused nonReentrant {
-        WorkerInfo storage worker = workers[msg.sender];
-        require(worker.isActive, "BondedWorkerRegistry: worker not active");
-        require(decreaseAmount > 0, "BondedWorkerRegistry: invalid amount");
-        require(decreaseAmount < worker.stakeAmount, "BondedWorkerRegistry: cannot withdraw all stake");
-        
-        uint256 newAmount = worker.stakeAmount - decreaseAmount;
-        require(newAmount >= minimumStake, "BondedWorkerRegistry: below minimum stake");
-
-        // Update state
-        worker.stakeAmount = newAmount;
-        totalStaked -= decreaseAmount;
-
-        // Transfer stake back to worker
-        aipgToken.safeTransfer(msg.sender, decreaseAmount);
-
-        emit StakeDecreased(msg.sender, decreaseAmount);
-    }
-
-    // ============ MODEL MANAGEMENT ============
-    
-    /**
-     * @dev Update supported models for a worker
-     * @param newModels Array of new model hashes
-     */
-    function updateSupportedModels(bytes32[] calldata newModels) external onlyBondedWorker whenNotPaused {
-        require(newModels.length > 0, "BondedWorkerRegistry: must support at least one model");
-        
-        WorkerInfo storage worker = workers[msg.sender];
-        require(worker.isActive, "BondedWorkerRegistry: worker not active");
-
-        // Remove from old model mappings
-        for (uint256 i = 0; i < worker.supportedModels.length; i++) {
-            bytes32 modelHash = worker.supportedModels[i];
-            address[] storage workersForModel = modelToWorkers[modelHash];
-            
-            for (uint256 j = 0; j < workersForModel.length; j++) {
-                if (workersForModel[j] == msg.sender) {
-                    workersForModel[j] = workersForModel[workersForModel.length - 1];
-                    workersForModel.pop();
-                    break;
-                }
-            }
-        }
-
-        // Add to new model mappings
-        for (uint256 i = 0; i < newModels.length; i++) {
-            modelToWorkers[newModels[i]].push(msg.sender);
-        }
-
-        // Update worker's supported models
-        worker.supportedModels = newModels;
-
-        emit ModelsUpdated(msg.sender, newModels);
-    }
-
-    // ============ REWARD FUNCTIONS ============
-    
-    /**
-     * @dev Record job completion and reward (called by EmissionsController)
-     * @param worker Worker address
-     * @param rewardAmount AIPG reward amount
-     */
-    function recordJobCompletion(address worker, uint256 rewardAmount) external onlyEmissionsController {
-        require(isBondedWorker[worker], "BondedWorkerRegistry: not a bonded worker");
-        
-        WorkerInfo storage workerInfo = workers[worker];
-        workerInfo.totalJobsCompleted += 1;
-        workerInfo.totalRewardsEarned += rewardAmount;
-        workerInfo.lastActivity = block.timestamp;
-
-        emit JobCompleted(worker, rewardAmount);
-    }
-
-    /**
-     * @dev Update worker activity timestamp
-     */
-    function updateActivity() external onlyBondedWorker {
-        workers[msg.sender].lastActivity = block.timestamp;
-        emit ActivityUpdated(msg.sender, block.timestamp);
-    }
-
-    // ============ SLASHING FUNCTIONS ============
-    
-    /**
-     * @dev Slash a worker's stake (admin only)
-     * @param worker Worker address
-     * @param slashedAmount Amount to slash
-     * @param reason Reason for slashing
-     */
-    function slashWorker(
-        address worker,
-        uint256 slashedAmount,
-        string calldata reason
-    ) external onlyAdmin {
-        require(isBondedWorker[worker], "BondedWorkerRegistry: not a bonded worker");
-        
-        WorkerInfo storage workerInfo = workers[worker];
-        require(slashedAmount <= workerInfo.stakeAmount, "BondedWorkerRegistry: insufficient stake to slash");
-        
-        // Update state
-        workerInfo.stakeAmount -= slashedAmount;
-        totalStaked -= slashedAmount;
-        
-        // If stake falls below minimum, deactivate worker
-        if (workerInfo.stakeAmount < minimumStake) {
-            workerInfo.isActive = false;
-            isBondedWorker[worker] = false;
-        }
-
-        // Transfer slashed amount to admin (or burn)
-        aipgToken.safeTransfer(msg.sender, slashedAmount);
-
-        emit WorkerSlashed(worker, slashedAmount, reason);
-    }
-
-    // ============ ADMIN FUNCTIONS ============
-    
-    /**
-     * @dev Set minimum stake amount
-     * @param newMinimum New minimum stake
-     */
-    function setMinimumStake(uint256 newMinimum) external onlyAdmin {
-        require(newMinimum > 0, "BondedWorkerRegistry: invalid minimum stake");
-        uint256 oldValue = minimumStake;
-        minimumStake = newMinimum;
-        emit MinimumStakeUpdated(oldValue, newMinimum);
-    }
-
-    /**
-     * @dev Set maximum stake amount
-     * @param newMaximum New maximum stake
-     */
-    function setMaximumStake(uint256 newMaximum) external onlyAdmin {
-        require(newMaximum >= minimumStake, "BondedWorkerRegistry: invalid maximum stake");
-        uint256 oldValue = maximumStake;
-        maximumStake = newMaximum;
-        emit MaximumStakeUpdated(oldValue, newMaximum);
-    }
-
-    /**
-     * @dev Pause contract
-     */
-    function pause() external onlyAdmin {
-        _pause();
-    }
-
-    /**
-     * @dev Unpause contract
-     */
-    function unpause() external onlyAdmin {
-        _unpause();
-    }
-
-    // ============ VIEW FUNCTIONS ============
-    
-    /**
-     * @dev Get worker information
-     * @param worker Worker address
-     * @return Worker information struct
-     */
-    function getWorkerInfo(address worker) external view returns (WorkerInfo memory) {
-        return workers[worker];
-    }
-
-    /**
-     * @dev Get workers supporting a specific model
-     * @param modelHash Model hash
-     * @return Array of worker addresses
-     */
-    function getWorkersForModel(bytes32 modelHash) external view returns (address[] memory) {
-        return modelToWorkers[modelHash];
-    }
-
-    /**
-     * @dev Get all registered workers
-     * @return Array of all worker addresses
-     */
-    function getAllWorkers() external view returns (address[] memory) {
-        return allWorkers;
-    }
-
-    /**
-     * @dev Get total number of workers
-     * @return Total worker count
-     */
-    function getTotalWorkers() external view returns (uint256) {
-        return allWorkers.length;
-    }
-
-    /**
-     * @dev Check if worker supports a model
-     * @param worker Worker address
-     * @param modelHash Model hash
-     * @return Whether worker supports the model
-     */
-    function workerSupportsModel(address worker, bytes32 modelHash) external view returns (bool) {
-        bytes32[] memory supportedModels = workers[worker].supportedModels;
-        for (uint256 i = 0; i < supportedModels.length; i++) {
-            if (supportedModels[i] == modelHash) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @dev Get worker address by worker ID
-     * @param workerId Worker ID string
-     * @return Worker address (address(0) if not found)
-     */
-    function getWorkerByID(string calldata workerId) external view returns (address) {
-        return workerIdToAddress[workerId];
-    }
-}
+        worker.total

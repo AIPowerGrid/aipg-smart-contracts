@@ -1,163 +1,111 @@
-# Audit Scope & Priorities
+# Audit Scope
 
-## Audit Round 2 - Autonomous Fund
+## Focus Contracts (Production)
 
-**See**: `AUDIT_SCOPE_AUTONOMOUS_FUND.md` for complete audit scope of the Autonomous Fund system.
+### 1. AIPGTokenV2 ✅ DEPLOYED
 
-The Autonomous Fund contracts are **DEPLOYED TO BASE MAINNET** and are ready for audit.
-
----
-
-## Audit Round 1 - Two Contracts
-
-This audit focuses on **TWO contracts**:
-
-### 1. AIPGTokenV2 (DEPLOYED)
-
-**Status**: - **DEPLOYED TO BASE MAINNET**  
+**Status**: Live on Base Mainnet  
 **Address**: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`  
-**Priority**: **CRITICAL - PRODUCTION CONTRACT**
+**Priority**: CRITICAL - Production contract
 
-This is our primary asset token contract currently live on Base Mainnet. This contract is the foundation of our bridge and token ecosystem.
+ERC20 token contract with pre-minted supply (150M total).
 
-### 2. EmissionsControllerV2 (PENDING DEPLOYMENT)
-
-**Status**: - **READY FOR DEPLOYMENT**  
-**Priority**: **HIGH - DEPLOYMENT PENDING AUDIT**
-
-This contract manages token emissions and distributes rewards to GPU workers. Will be deployed to Base Mainnet immediately after audit approval.
-
----
-
-## AIPGTokenV2 - Audit Focus
-
-### Key Areas to Audit:
+**Key Areas to Audit:**
 1. **Access Control & Roles**
    - DEFAULT_ADMIN_ROLE management
    - MINTER_ROLE security (used by bridge)
    - PAUSER_ROLE emergency controls
-   
-2. **Bridge Minting Security**
-   - `bridgeMint` function with EIP-712 signatures
-   - UUID replay protection
-   - Signature verification
-   - Deadline enforcement
-   
-3. **Token Economics**
-   - MAX_SUPPLY cap (150M tokens)
-   - Mint/burn mechanics
-   - Transfer restrictions (if any)
-   
-4. **Emergency Controls**
+
+2. **Token Security**
+   - MAX_SUPPLY enforcement (150M cap)
+   - Minting/burning mechanics
+   - Transfer functionality
+
+3. **Emergency Controls**
    - Pause/unpause functionality
    - Admin role transfer safety
-   
-5. **EIP-712 Implementation**
-   - Domain separator correctness
-   - Signature replay protection across chains
+
+4. **EIP-712 Implementation** (if applicable)
+   - Signature verification
+   - Replay protection
 
 ---
 
-## EmissionsControllerV2 - Audit Focus
+### 2. StakingVault ✅ LIVE
 
-### Key Areas to Audit:
-1. **Access Control & Roles**
-   - EMISSIONS_MANAGER_ROLE security
-   - WORKER_ROLE management
-   - SIGNER_ROLE for EIP-712 signatures
-   
-2. **Worker Reward Distribution**
-   - EIP-712 signature verification for worker claims
-   - Nonce-based replay protection
-   - Deadline enforcement
-   - Token minting via IAIPGToken interface
-   
-3. **Economic Model**
-   - Era-based emission schedule (7 eras)
-   - Reward splits: 60% workers, 30% stakers, 10% treasury
-   - MAX_SUPPLY enforcement (150M tokens)
-   - Reward per hour calculations
-   
-4. **Staking Integration**
-   - IStakingVault interface calls
-   - notifyRewardAmount() security
-   - Handling zero/invalid vault address
-   
-5. **Emergency Controls**
-   - Emissions pause mechanism
-   - Era progression safety
-   - Treasury/vault address updates
-   
-6. **EIP-712 Implementation**
-   - WorkerClaim signature verification
-   - Domain separator correctness
-   - Nonce management
+**Status**: Live on Base Mainnet  
+**Address**: `0x3ED14A6D5A48614D77f313389611410d38fd8277`  
+**Priority**: HIGH - Production contract
 
-### Integration Requirements:
-- Requires MINTER_ROLE on AIPGTokenV2
-- Requires REWARD_DISTRIBUTOR_ROLE on StakingVault (optional)
-- Must interact securely with external contracts
+Synthetix-style staking mechanism with manual reward distribution.
+
+**Key Areas to Audit:**
+1. **Staking Mechanics**
+   - Stake/withdraw functions
+   - Reward accrual calculations
+   - No lock period enforcement
+
+2. **Reward Distribution**
+   - notifyRewardAmount() function
+   - REWARD_DISTRIBUTOR_ROLE security
+   - Linear reward streaming over duration
+
+3. **Access Control**
+   - Role management (DEFAULT_ADMIN_ROLE, REWARD_DISTRIBUTOR_ROLE)
+   - Admin function restrictions
+   - Pausable functionality
+
+4. **Economic Security**
+   - Reward rate calculations
+   - Edge cases (zero stakers, late claims)
+   - Total supply tracking
+
+5. **Integration with AIPGTokenV2**
+   - Token transfer security
+   - Proper ERC20 interface usage
 
 ---
 
-## Additional Contracts (For Reference Only)
+## Additional Contracts (Reference)
 
-**Status**: NOT PART OF THIS AUDIT  
-**Timeline**: Will be audited in future rounds
+The following contracts are included for context:
 
-The following contracts are included in this repository for context and future audit rounds:
+- **GridNFT** - AI-generated NFT contract
+- **ModelRegistry** - Model constraints registry
+- **RecipeVault** - ComfyUI workflow storage
+- **BondedWorkerRegistry** - Worker registry
 
-1. **BondedWorkerRegistry** - Worker staking and slashing registry
-2. **GridNFT** - NFT contract for AI-generated art with on-chain parameters
-3. **ModelRegistry** - Registry for AI models with constraints
-4. **RecipeVault** - Storage for ComfyUI workflow templates
-5. **StakingVault** - Token staking mechanism (needed by EmissionsController)
+These are **NOT** part of this audit round but provide context for the token ecosystem.
 
-These are for reference only and NOT part of Audit Round 1.
+---
 
-## Audit Deliverables Requested
+## Audit Deliverables
 
-### For Both Contracts (AIPGTokenV2 + EmissionsControllerV2):
+### For AIPGTokenV2 + StakingVault:
 - [ ] Full security audit report with executive summary
-- [ ] Critical/High/Medium/Low severity findings with remediation steps
+- [ ] Critical/High/Medium/Low severity findings with remediation
 - [ ] Gas optimization recommendations
 - [ ] Access control analysis for all roles
-- [ ] Economic security review (tokenomics, emissions schedule)
-- [ ] EIP-712 signature implementation review
-- [ ] Integration security between the two contracts
+- [ ] Economic security review
+- [ ] Integration security between contracts
 - [ ] Test coverage recommendations
-- [ ] Deployment checklist and recommendations
-
-### Timeline:
-- Target: Complete audit within 2-4 weeks
-- Deployment: EmissionsControllerV2 deployed immediately after approval
-- [ ] Recommendations for improvement before mainnet deployment
-
-## Testing Information
-
-All contracts are compiled with:
-- Solidity `0.8.24`
-- OpenZeppelin contracts (see imports)
-- Hardhat development environment
-
-Test deployments available on:
-- **Base Sepolia**: Testnet addresses in `docs/ADDRESSES.md`
-- **Base Mainnet**: AIPGTokenV2 only (see above)
-
-## Timeline
-
-1. **Week 1-2**: AIPGTokenV2 primary audit
-2. **Week 2-3**: Fix findings, prepare deployment plan for secondary contracts
-3. **Week 4+**: Deploy secondary contracts, schedule next audit round
-
-## Contact & Questions
-
-For questions about:
-- **Architecture**: See `docs/` directory
-- **Deployment details**: See `ADDRESSES.md`
-- **Test environment**: Hardhat setup in `../production/`
+- [ ] Deployment verification checklist
 
 ---
 
-**Last Updated**: September 30, 2025  
-**Audit Grant Round**: 1 of N (iterative approach)
+## Testing & Verification
+
+All contracts compiled with:
+- Solidity `0.8.24`
+- OpenZeppelin contracts
+- Hardhat environment
+
+**Mainnet Verification:**
+- AIPGTokenV2: [BaseScan](https://basescan.org/address/0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608)
+- StakingVault: [BaseScan](https://basescan.org/address/0x3ED14A6D5A48614D77f313389611410d38fd8277)
+
+**Network**: Base Mainnet (Chain ID: 8453)
+
+---
+
+**Last Updated**: November 2025

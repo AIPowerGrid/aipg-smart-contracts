@@ -8,20 +8,20 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title AvantisAdapter
- * @notice Adapter for executing trades on Avantis perpetuals on Base
+ * @notice Adapter for executing trades on Avantis perpetuals on Base using delegatedAction
  * @dev Integrates with Avantis DEX for BTC perpetuals trading
  * 
  * DEPLOYED TO BASE MAINNET
- * Address: 0x2F252D2D189C7B916A00C524B9EC2b398aB6BF8C
- * Explorer: https://basescan.org/address/0x2F252D2D189C7B916A00C524B9EC2b398aB6BF8C
- * Deployed: November 9, 2025 (v9 - FINAL: Accepts price from off-chain, matches SDK)
+ * Address: TBD (v10)
+ * Explorer: TBD
+ * Deployed: November 9, 2025 (v10 - Uses delegatedAction for contract-based trading)
  * 
- * Key Changes in v9:
- * - FIXED: Accepts openPrice as parameter (fetched off-chain from Pyth)
- * - Removed getPriceFromAggregator() call (was failing)
- * - Matches exactly how Avantis Python SDK works
- * - Price fetched off-chain: int(price_data.parsed[0].converted_price * 10**10)
- * - priceUpdateData parameter kept for interface compatibility but unused
+ * Key Changes in v10:
+ * - FIXED: Uses delegatedAction() instead of direct openTrade() call
+ * - Allows smart contracts to trade on behalf of an EOA (ownerAddress)
+ * - Owner (Ledger) receives the position and PnL, not the contract
+ * - Matches Avantis SDK's build_trade_open_tx_delegate() pattern
+ * - Position ownership: owner EOA, not this contract
  * 
  * Avantis Protocol Addresses (Base Mainnet):
  * - Trading: 0x44914408af82bC9983bbb330e3578E1105e11d4e
@@ -33,6 +33,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * 
  * Docs: https://docs.avantisfi.com/
  * SDK: https://github.com/Avantis-Labs/avantis_trader_sdk
+ * delegatedAction Reference: avantis_trader_sdk/rpc/trade.py (build_trade_open_tx_delegate)
  */
 contract AvantisAdapter is IExecutionAdapter, Ownable {
     using SafeERC20 for IERC20;
@@ -44,6 +45,7 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     address public constant MULTICALL = 0xA7cFc43872F4D7B0E6141ee8c36f1F7FEe5d099e;
     
     IERC20 public immutable usdc; // USDC token
+    address public immutable ownerAddress; // EOA that receives positions and PnL
     
     // Track positions
     mapping(bytes32 => PositionInfo) public positions;
@@ -79,9 +81,11 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     
     // Avantis interface functions (using low-level calls)
     
-    constructor(address _usdc, uint256 _btcPairIndex) Ownable(msg.sender) {
-        usdc = IERC20(_usdc);
+    constructor(address _usdc, uint256 _btcPairIndex, address _ownerAddress) Ownable(msg.sender) {
         require(_usdc != address(0), "Invalid USDC address");
+        require(_ownerAddress != address(0), "Invalid owner address");
+        usdc = IERC20(_usdc);
+        ownerAddress = _ownerAddress;
         btcPairIndex = _btcPairIndex; // BTC/USD pair index (need to query from Avantis)
     }
     
@@ -145,16 +149,16 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
             tradeIndex: tradeIndex
         });
         
-        userPositions[msg.sender].push(positionId);
+        userPositions[ownerAddress].push(positionId); // Track by owner, not msg.sender
         
-        // Build trade input
+        // Build trade input with ownerAddress as trader (EOA receives position)
         TradeInput memory tradeInput = TradeInput({
-            trader: msg.sender,
+            trader: ownerAddress, // Owner EOA, not this contract
             pairIndex: btcPairIndex,
             index: tradeIndex,
             initialPosToken: 0, // Not used for USDC
             positionSizeUSDC: collateral6Dec, // Collateral in USDC (6 decimals)
-            openPrice: openPrice, // 0 = market order
+            openPrice: openPrice, // Price from Pyth (off-chain)
             buy: true, // isLong = true
             leverage: leverage10Dec, // Leverage (10 decimals)
             tp: 0, // No take profit
@@ -162,20 +166,24 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
             timestamp: block.timestamp
         });
         
-        // Encode function call for openTrade
-        bytes memory data = abi.encodeWithSignature(
+        // Step 1: Encode the openTrade call (what the owner would call)
+        bytes memory openTradeCall = abi.encodeWithSignature(
             "openTrade((address,uint256,uint256,uint256,uint256,uint256,bool,uint256,uint256,uint256,uint256),uint256,uint256)",
             tradeInput,
             uint256(0), // MARKET order
             uint256(3e10) // 3% slippage (in 10^10 precision)
         );
         
-        // NOTE: Avantis handles Pyth oracle updates internally
-        // We just need to forward ETH for execution fees
+        // Step 2: Wrap in delegatedAction (contract executes on behalf of owner)
+        bytes memory delegatedCall = abi.encodeWithSignature(
+            "delegatedAction(address,bytes)",
+            ownerAddress, // EOA who receives the position
+            openTradeCall // Encoded openTrade call
+        );
         
-        // Call Avantis Trading contract with full msg.value for execution fee
-        (bool success, ) = TRADING.call{value: msg.value}(data);
-        require(success, "Avantis openTrade failed");
+        // Call Avantis Trading contract via delegatedAction
+        (bool success, ) = TRADING.call{value: msg.value}(delegatedCall);
+        require(success, "Avantis delegatedAction failed");
         
         return positionId;
     }
@@ -225,16 +233,16 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
             tradeIndex: tradeIndex
         });
         
-        userPositions[msg.sender].push(positionId);
+        userPositions[ownerAddress].push(positionId); // Track by owner, not msg.sender
         
-        // Build trade input for short
+        // Build trade input with ownerAddress as trader (EOA receives position)
         TradeInput memory tradeInput = TradeInput({
-            trader: msg.sender,
+            trader: ownerAddress, // Owner EOA, not this contract
             pairIndex: btcPairIndex,
             index: tradeIndex,
             initialPosToken: 0,
             positionSizeUSDC: collateral6Dec,
-            openPrice: openPrice,
+            openPrice: openPrice, // Price from Pyth (off-chain)
             buy: false, // isLong = false for short
             leverage: leverage10Dec,
             tp: 0,
@@ -242,20 +250,24 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
             timestamp: block.timestamp
         });
         
-        // Encode function call for openTrade
-        bytes memory data = abi.encodeWithSignature(
+        // Step 1: Encode the openTrade call (what the owner would call)
+        bytes memory openTradeCall = abi.encodeWithSignature(
             "openTrade((address,uint256,uint256,uint256,uint256,uint256,bool,uint256,uint256,uint256,uint256),uint256,uint256)",
             tradeInput,
             uint256(0), // MARKET order
             uint256(3e10) // 3% slippage (in 10^10 precision)
         );
         
-        // NOTE: Avantis handles Pyth oracle updates internally
-        // We just need to forward ETH for execution fees
+        // Step 2: Wrap in delegatedAction (contract executes on behalf of owner)
+        bytes memory delegatedCall = abi.encodeWithSignature(
+            "delegatedAction(address,bytes)",
+            ownerAddress, // EOA who receives the position
+            openTradeCall // Encoded openTrade call
+        );
         
-        // Call Avantis Trading contract with full msg.value for execution fee
-        (bool success, ) = TRADING.call{value: msg.value}(data);
-        require(success, "Avantis openTrade failed");
+        // Call Avantis Trading contract via delegatedAction
+        (bool success, ) = TRADING.call{value: msg.value}(delegatedCall);
+        require(success, "Avantis delegatedAction failed");
         
         return positionId;
     }
@@ -342,7 +354,8 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
     }
     
     /**
-     * @notice Get all open positions for caller
+     * @notice Get all open positions for owner
+     * @dev Positions are owned by ownerAddress (EOA), not the calling contract
      */
     function getOpenPositions() 
         external 
@@ -350,17 +363,18 @@ contract AvantisAdapter is IExecutionAdapter, Ownable {
         override 
         returns (bytes32[] memory) 
     {
-        return userPositions[msg.sender];
+        return userPositions[ownerAddress];
     }
     
     /**
-     * @notice Get next trade index for a trader
+     * @notice Get next trade index for the owner
      * @dev In production, query existing positions from Avantis
+     * @dev Positions are owned by ownerAddress, not msg.sender
      */
-    function getNextTradeIndex(address trader) internal view returns (uint256) {
-        // TODO: Query positions from Avantis to get next index
-        // For now, use a simple counter (not ideal, but works)
-        return userPositions[trader].length;
+    function getNextTradeIndex(address /* trader */) internal view returns (uint256) {
+        // TODO: Query positions from Avantis to get next index for ownerAddress
+        // For now, use a simple counter based on ownerAddress positions
+        return userPositions[ownerAddress].length;
     }
     
     /**

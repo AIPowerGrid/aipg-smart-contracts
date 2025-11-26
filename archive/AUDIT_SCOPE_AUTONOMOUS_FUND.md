@@ -10,31 +10,32 @@ This audit focuses on the **Autonomous Fund** system - a smart contract that acc
 
 ## Contracts Under Audit
 
-### 1. AutonomousFund (DEPLOYED - v6)
-**Address**: `0x4De346834C536e1B4Ae47681D4545D655441D253`  
+### 1. AutonomousFund (DEPLOYED - v7)
+**Address**: `0x01a360773623fbC3778d2931bF11f48800Df5d71`  
 **Location**: `contracts/autonomous-fund/AutonomousFund.sol`  
 **Priority**: **CRITICAL**  
-**Version**: v6 (FINAL - Accepts price parameter from off-chain)
+**Version**: v7 (Uses AvantisAdapter v10 with delegatedAction)
 
 Main contract that manages treasury, accepts signals, and enforces risk limits.
 
-### 2. AvantisAdapter (DEPLOYED - v9)
-**Address**: `0x2F252D2D189C7B916A00C524B9EC2b398aB6BF8C`  
+### 2. AvantisAdapter (DEPLOYED - v10)
+**Address**: `0xD66d431AEe720cEF609916f4F34c3528dA20f504`  
 **Location**: `contracts/adapters/AvantisAdapter.sol`  
 **Priority**: **HIGH**  
-**Version**: v9 (FINAL - Accepts price from off-chain, matches SDK)
+**Version**: v10 (FINAL - Uses delegatedAction for contract-based trading)
 
 **Key Features**:
-- **FIXED**: Accepts `openPrice` as parameter (fetched off-chain from Pyth)
-- Removed `getPriceFromAggregator()` call (was failing on-chain)
-- Matches exactly how Avantis Python SDK works
-- Price calculated off-chain: `int(price_data.parsed[0].converted_price * 10**10)`
-- Simply forwards ETH for execution fees to Avantis
-- `priceUpdateData` parameter kept for interface compatibility but unused
+- **FIXED**: Uses `delegatedAction()` instead of direct `openTrade()` call
+- Allows smart contracts to trade on behalf of an EOA (ownerAddress)
+- Owner (Ledger) receives the position and PnL, not the contract
+- Matches Avantis SDK's `build_trade_open_tx_delegate()` pattern
+- Position ownership: owner EOA, not this contract
+- Accepts `openPrice` as parameter (fetched off-chain from Pyth)
+- No on-chain price fetching (avoids failed calls)
 - All functions `payable` to accept ETH for execution fees
 - Owner can withdraw ETH for emergency recovery
 
-Adapter contract that interfaces with Avantis Trading contract for trade execution.
+Adapter contract that interfaces with Avantis Trading contract for delegated trade execution.
 
 ### 3. IExecutionAdapter (Interface)
 **Location**: `contracts/autonomous-fund/IExecutionAdapter.sol`  
