@@ -10,8 +10,10 @@ AIPG (AI Power Grid) powers a decentralized AI compute network where GPU workers
 |--------|-------|
 | **Maximum Supply** | 150,000,000 AIPG (capped) |
 | **Total Minted** | 150,000,000 AIPG (all pre-minted) |
-| **Minting Status** | Disabled |
+| **Minting Status** | **RENOUNCED** (permanently disabled) |
 | **Network** | Base L2 (Chain ID: 8453) |
+
+> ⚠️ **Security Note:** Minting capability has been permanently renounced. No address holds MINTER_ROLE, ensuring the supply cannot be inflated.
 
 ## Economic Components
 
@@ -19,9 +21,10 @@ AIPG (AI Power Grid) powers a decentralized AI compute network where GPU workers
 
 The core token contract:
 - ERC20 with Permit, Pausable, Burnable extensions
-- 150M max supply (all pre-minted)
-- Minting disabled after launch
+- 150M fixed supply (all pre-minted)
+- **Minting permanently renounced** (MINTER_ROLE revoked)
 - Emergency pause controls
+- Supply cannot be inflated
 
 **Address**: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`
 

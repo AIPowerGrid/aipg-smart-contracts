@@ -8,17 +8,18 @@
 **Address**: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`  
 **Priority**: CRITICAL - Production contract
 
-ERC20 token contract with pre-minted supply (150M total).
+ERC20 token contract with fixed supply (150M total). **Minting has been permanently renounced.**
 
 **Key Areas to Audit:**
 1. **Access Control & Roles**
    - DEFAULT_ADMIN_ROLE management
-   - MINTER_ROLE security (used by bridge)
+   - MINTER_ROLE: **RENOUNCED** (no addresses hold this role)
    - PAUSER_ROLE emergency controls
 
 2. **Token Security**
    - MAX_SUPPLY enforcement (150M cap)
-   - Minting/burning mechanics
+   - Minting permanently disabled (renounced)
+   - Burning mechanics
    - Transfer functionality
 
 3. **Emergency Controls**

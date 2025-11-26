@@ -13,7 +13,7 @@ Production smart contracts.
 
 | File | Status | Description |
 |------|--------|-------------|
-| `AIPGTokenV2.sol` | ✅ Production | ERC20 token (150M cap) |
+| `AIPGTokenV2.sol` | ✅ Production | ERC20 token (150M fixed, minting renounced) |
 | `StakingVault.sol` | ✅ Production | Synthetix-style staking |
 | `BondedWorkerRegistry.sol` | Ready | Worker registry with slashing |
 | `GridNFT.sol` | Ready | AI-generated art NFTs |

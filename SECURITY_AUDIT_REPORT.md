@@ -29,14 +29,15 @@ All production contracts are secure and ready for use. No critical or high-sever
 ## 1. AIPGTokenV2
 
 ### Overview
-ERC20 token with 150M max supply, minting capability (disabled), pausable transfers, and bridge functionality.
+ERC20 token with fixed 150M supply. **Minting has been permanently renounced for security.**
 
 ### Security Features
 - ✅ ERC20Capped enforces 150M max supply
+- ✅ **Minting renounced** - No address holds MINTER_ROLE
 - ✅ AccessControl for role-based permissions
 - ✅ ReentrancyGuard on sensitive functions
 - ✅ Pausable for emergency stops
-- ✅ EIP-712 signatures for bridge minting
+- ✅ Fixed supply - cannot be inflated
 
 ### Findings
 **None** - Contract is verified on BaseScan and uses standard OpenZeppelin patterns.
@@ -120,7 +121,7 @@ Ready for mainnet deployment when needed.
 | Role | Purpose | Holder |
 |------|---------|--------|
 | DEFAULT_ADMIN_ROLE | Grant/revoke roles | Multisig |
-| MINTER_ROLE | Mint tokens (disabled) | None active |
+| MINTER_ROLE | Mint tokens | **RENOUNCED** (no holder) |
 | PAUSER_ROLE | Emergency pause | Admin |
 
 ### StakingVault Roles

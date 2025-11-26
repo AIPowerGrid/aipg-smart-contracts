@@ -65,7 +65,7 @@ node scripts/interact-aipg-token.js
 
 | Contract | Status | Notes |
 |----------|--------|-------|
-| AIPGTokenV2 | ✅ Live | 150M supply, minting disabled |
+| AIPGTokenV2 | ✅ Live | 150M supply, **minting renounced** |
 | StakingVault | ✅ Live | Synthetix-style, no lock period |
 | BondedWorkerRegistry | 📋 Ready | Deploy when needed |
 | GridNFT | 📋 Ready | Deploy when needed |
