@@ -67,8 +67,10 @@ node scripts/interact-aipg-token.js
 |----------|--------|-------|
 | AIPGTokenV2 | ✅ Live | 150M supply, **minting renounced** |
 | StakingVault | ✅ Live | Synthetix-style, no lock period |
-| BondedWorkerRegistry | 📋 Ready | Deploy when needed |
-| GridNFT | 📋 Ready | Deploy when needed |
+| GridNFT | 📋 Ready | AI-generated art NFTs |
+| ModelRegistry | 📋 Ready | Model constraints & validation |
+| RecipeVault | 📋 Ready | ComfyUI workflow storage |
+| BondedWorkerRegistry | 📋 Ready | Worker staking & slashing |
 
 ---
 
