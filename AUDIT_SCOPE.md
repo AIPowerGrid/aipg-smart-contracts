@@ -26,10 +26,6 @@ ERC20 token contract with fixed supply (150M total). **Minting has been permanen
    - Pause/unpause functionality
    - Admin role transfer safety
 
-4. **EIP-712 Implementation** (if applicable)
-   - Signature verification
-   - Replay protection
-
 ---
 
 ### 2. StakingVault ✅ LIVE
@@ -56,39 +52,75 @@ Synthetix-style staking mechanism with manual reward distribution.
    - Admin function restrictions
    - Pausable functionality
 
-4. **Economic Security**
-   - Reward rate calculations
-   - Edge cases (zero stakers, late claims)
-   - Total supply tracking
-
-5. **Integration with AIPGTokenV2**
-   - Token transfer security
-   - Proper ERC20 interface usage
-
 ---
 
-## Additional Contracts (Reference)
+### 3. Grid 🧪 TESTNET
 
-The following contracts are included for context:
+**Status**: Live on Base Sepolia (Testnet)  
+**Address**: `0xd66456855dF1A24064000556eef41341a1043FA2`  
+**Priority**: HIGH - Pre-production
 
-- **GridNFT** - AI-generated NFT contract
-- **ModelRegistry** - Model constraints registry
-- **RecipeVault** - ComfyUI workflow storage
-- **BondedWorkerRegistry** - Worker registry
+Modular proxy contract (EIP-2535 pattern) combining all Grid compute infrastructure.
 
-These are **NOT** part of this audit round but provide context for the token ecosystem.
+**Architecture:**
+```
+Grid.sol (Proxy)
+├── modules/
+│   ├── ModelVault.sol      ← AI model registry
+│   ├── RecipeVault.sol     ← Workflow storage
+│   ├── JobAnchor.sol       ← Job tracking
+│   ├── WorkerRegistry.sol  ← Worker bonding
+│   ├── RoleManager.sol     ← Access control
+│   ├── ModuleManager.sol   ← Upgrade management
+│   ├── ModuleInspector.sol ← Introspection
+│   └── Ownership.sol       ← ERC-173
+├── libraries/
+│   ├── GridStorage.sol     ← Shared storage (AppStorage pattern)
+│   └── LibGrid.sol         ← Routing logic
+└── interfaces/
+```
+
+**Key Areas to Audit:**
+
+1. **Proxy Security (EIP-2535)**
+   - Function selector routing
+   - Module management (add/replace/remove)
+   - Storage collision prevention
+   - Initialization safety
+
+2. **Shared Storage (GridStorage.sol)**
+   - AppStorage pattern implementation
+   - Storage slot positioning
+   - Cross-module state integrity
+
+3. **Module Security**
+   - ModelVault: Model registration, hash uniqueness
+   - RecipeVault: Workflow storage, creator permissions
+   - JobAnchor: Merkle root anchoring, job verification
+   - WorkerRegistry: Bond handling, slash mechanics
+
+4. **Access Control**
+   - Role-based permissions across modules
+   - ADMIN_ROLE, REGISTRAR_ROLE, ANCHOR_ROLE
+   - Pause functionality
+
+5. **Upgrade Safety**
+   - ModuleManager restrictions
+   - Owner-only upgrades
+   - Function selector conflicts
 
 ---
 
 ## Audit Deliverables
 
-### For AIPGTokenV2 + StakingVault:
+### For AIPGTokenV2 + StakingVault + Grid:
 - [ ] Full security audit report with executive summary
 - [ ] Critical/High/Medium/Low severity findings with remediation
 - [ ] Gas optimization recommendations
 - [ ] Access control analysis for all roles
 - [ ] Economic security review
-- [ ] Integration security between contracts
+- [ ] Proxy/upgrade security assessment (Grid)
+- [ ] Storage collision analysis (Grid)
 - [ ] Test coverage recommendations
 - [ ] Deployment verification checklist
 
@@ -105,8 +137,13 @@ All contracts compiled with:
 - AIPGTokenV2: [BaseScan](https://basescan.org/address/0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608)
 - StakingVault: [BaseScan](https://basescan.org/address/0x3ED14A6D5A48614D77f313389611410d38fd8277)
 
-**Network**: Base Mainnet (Chain ID: 8453)
+**Testnet Verification:**
+- Grid: [BaseScan Sepolia](https://sepolia.basescan.org/address/0xd66456855dF1A24064000556eef41341a1043FA2)
+
+**Networks**: 
+- Base Mainnet (Chain ID: 8453)
+- Base Sepolia (Chain ID: 84532)
 
 ---
 
-**Last Updated**: November 2025
+**Last Updated**: December 2025

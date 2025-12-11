@@ -15,11 +15,45 @@ Production smart contracts.
 |------|--------|-------------|
 | `AIPGTokenV2.sol` | ✅ Production | ERC20 token (150M fixed, minting renounced) |
 | `StakingVault.sol` | ✅ Production | Synthetix-style staking |
-| `BondedWorkerRegistry.sol` | Ready | Worker registry with slashing |
-| `GridNFT.sol` | Ready | AI-generated art NFTs |
-| `ModelRegistry.sol` | Ready | Model constraints |
-| `RecipeVault.sol` | Ready | ComfyUI workflow storage |
+| `BondedWorkerRegistry.sol` | Reference | Worker registry with slashing |
+| `GridNFT.sol` | Reference | AI-generated art NFTs |
+| `ModelRegistry.sol` | Legacy | Replaced by Grid.ModelVault |
+| `RecipeVault.sol` | Legacy | Replaced by Grid.RecipeVault |
 | `interfaces/` | - | Contract interfaces |
+
+## contracts/grid/ (NEW)
+Modular Grid architecture using EIP-2535 pattern.
+
+| File | Description |
+|------|-------------|
+| `Grid.sol` | Main proxy contract - single entry point |
+| `GridInit.sol` | Initialization helper |
+
+### contracts/grid/modules/
+| Module | Description |
+|--------|-------------|
+| `ModelVault.sol` | AI model registry with IPFS/HTTP storage |
+| `RecipeVault.sol` | ComfyUI workflow storage |
+| `JobAnchor.sol` | Daily job anchoring with merkle proofs |
+| `WorkerRegistry.sol` | Worker bonding and tracking |
+| `RoleManager.sol` | Access control (ADMIN, REGISTRAR, ANCHOR roles) |
+| `ModuleManager.sol` | Add/replace/remove modules |
+| `ModuleInspector.sol` | Introspection (list modules/functions) |
+| `Ownership.sol` | ERC-173 ownership |
+
+### contracts/grid/libraries/
+| Library | Description |
+|---------|-------------|
+| `GridStorage.sol` | Shared storage (AppStorage pattern) |
+| `LibGrid.sol` | Proxy routing logic |
+
+### contracts/grid/interfaces/
+| Interface | Description |
+|-----------|-------------|
+| `IModuleManager.sol` | Module management |
+| `IModuleInspector.sol` | Introspection |
+| `IERC165.sol` | Interface detection |
+| `IERC173.sol` | Ownership standard |
 
 ## docs/
 | File | Description |
