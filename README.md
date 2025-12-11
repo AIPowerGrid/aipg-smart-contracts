@@ -11,6 +11,12 @@ Production smart contracts for the AI Power Grid decentralized GPU network.
 
 **Staking UI:** [aipowergrid.io/staking](https://aipowergrid.io/staking)
 
+## 🧪 Testnet (Base Sepolia)
+
+| Contract | Address | Link |
+|----------|---------|------|
+| **Grid** | `0xd66456855dF1A24064000556eef41341a1043FA2` | [BaseScan](https://sepolia.basescan.org/address/0xd66456855dF1A24064000556eef41341a1043FA2) |
+
 ---
 
 ## 📁 Structure
@@ -20,22 +26,27 @@ Production smart contracts for the AI Power Grid decentralized GPU network.
 ├── AUDIT_SCOPE.md               ← What to audit (READ FIRST)
 ├── SECURITY_AUDIT_REPORT.md     ← Internal security analysis
 │
-├── contracts/                   ← Solidity source code
+├── contracts/
 │   ├── AIPGTokenV2.sol          ← ERC20 token (PRODUCTION)
 │   ├── StakingVault.sol         ← Staking rewards (PRODUCTION)
-│   ├── BondedWorkerRegistry.sol ← Worker registry
-│   ├── GridNFT.sol              ← AI art NFTs
-│   ├── ModelRegistry.sol        ← Model constraints
-│   ├── RecipeVault.sol          ← Workflow storage
-│   └── interfaces/              ← Contract interfaces
+│   │
+│   └── grid/                    ← NEW: Modular Grid Architecture
+│       ├── Grid.sol             ← Main proxy contract
+│       ├── GridInit.sol         ← Initialization
+│       ├── modules/
+│       │   ├── ModelVault.sol   ← AI model registry
+│       │   ├── RecipeVault.sol  ← Workflow storage
+│       │   ├── JobAnchor.sol    ← Job tracking
+│       │   ├── WorkerRegistry.sol
+│       │   ├── RoleManager.sol
+│       │   └── ...
+│       ├── libraries/
+│       │   ├── GridStorage.sol  ← Shared state
+│       │   └── LibGrid.sol      ← Routing logic
+│       └── interfaces/
 │
 ├── docs/                        ← Documentation
-│   ├── ADDRESSES.md             ← Deployed addresses
-│   ├── STAKING.md               ← How staking works
-│   └── TOKENOMICS_AND_ECONOMICS.md
-│
 ├── security-analysis/           ← Flattened contracts + findings
-│
 ├── scripts/                     ← Verification scripts
 ├── sdk/                         ← JavaScript SDKs
 └── examples/                    ← Usage examples
@@ -43,12 +54,38 @@ Production smart contracts for the AI Power Grid decentralized GPU network.
 
 ---
 
+## 🔷 Grid Architecture (EIP-2535)
+
+Grid uses a **modular proxy pattern** where one contract routes calls to specialized modules:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                         GRID                            │
+│         Single address for all Grid functions           │
+├─────────────────────────────────────────────────────────┤
+│  registerModel()  →  ModelVault Module                  │
+│  storeRecipe()    →  RecipeVault Module                 │
+│  anchorDay()      →  JobAnchor Module                   │
+│  registerWorker() →  WorkerRegistry Module              │
+│  grantRole()      →  RoleManager Module                 │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Benefits:**
+- Single address for all compute infrastructure
+- Upgradeable modules without redeployment
+- Shared storage across all modules
+- Gas-efficient routing
+
+---
+
 ## 🎯 For Auditors
 
 1. **Start here:** `AUDIT_SCOPE.md`
 2. **Review contracts:** `contracts/AIPGTokenV2.sol` and `contracts/StakingVault.sol`
-3. **Check findings:** `SECURITY_AUDIT_REPORT.md`
-4. **Verify on-chain:** Links in table above
+3. **Review Grid:** `contracts/grid/` (new modular architecture)
+4. **Check findings:** `SECURITY_AUDIT_REPORT.md`
+5. **Verify on-chain:** Links in tables above
 
 ---
 
@@ -67,12 +104,11 @@ node scripts/interact-aipg-token.js
 |----------|--------|-------|
 | AIPGTokenV2 | ✅ Live | 150M supply, **minting renounced** |
 | StakingVault | ✅ Live | Synthetix-style, no lock period |
+| Grid | 🧪 Testnet | Modular proxy (Base Sepolia) |
 | GridNFT | 📋 Ready | AI-generated art NFTs |
-| ModelRegistry | 📋 Ready | Model constraints & validation |
-| RecipeVault | 📋 Ready | ComfyUI workflow storage |
-| BondedWorkerRegistry | 📋 Ready | Worker staking & slashing |
 
 ---
 
 **Network:** Base Mainnet (Chain ID: 8453)  
+**Testnet:** Base Sepolia (Chain ID: 84532)  
 **License:** MIT
