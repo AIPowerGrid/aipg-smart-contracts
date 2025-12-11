@@ -28,7 +28,7 @@ ERC20 token contract with fixed supply (150M total). **Minting has been permanen
 
 ---
 
-### 2. StakingVault ✅ LIVE
+### 2. StakingVault ✅ DEPLOYED
 
 **Status**: Live on Base Mainnet  
 **Address**: `0x3ED14A6D5A48614D77f313389611410d38fd8277`  
@@ -54,26 +54,26 @@ Synthetix-style staking mechanism with manual reward distribution.
 
 ---
 
-### 3. Grid 🧪 TESTNET
+### 3. Grid ✅ DEPLOYED
 
-**Status**: Live on Base Sepolia (Testnet)  
-**Address**: `0xd66456855dF1A24064000556eef41341a1043FA2`  
-**Priority**: HIGH - Pre-production
+**Status**: Live on Base Mainnet  
+**Address**: `0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609`  
+**Priority**: HIGH - Production contract
 
 Modular proxy contract (EIP-2535 pattern) combining all Grid compute infrastructure.
 
 **Architecture:**
 ```
-Grid.sol (Proxy)
+Grid.sol (Proxy) - 0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609
 ├── modules/
-│   ├── ModelVault.sol      ← AI model registry
-│   ├── RecipeVault.sol     ← Workflow storage
-│   ├── JobAnchor.sol       ← Job tracking
-│   ├── WorkerRegistry.sol  ← Worker bonding
-│   ├── RoleManager.sol     ← Access control
-│   ├── ModuleManager.sol   ← Upgrade management
-│   ├── ModuleInspector.sol ← Introspection
-│   └── Ownership.sol       ← ERC-173
+│   ├── ModelVault      - 0xf2A3bA5C4b56E85e022c5079B645120CE7B6d199
+│   ├── RecipeVault     - 0xddEC9d082FB2B45815Ee104947bfd556d4BD0aa1
+│   ├── JobAnchor       - 0x1aee3a3e4F2C05814d86cF2426Cf20Ed5c1bfa32
+│   ├── WorkerRegistry  - 0x0a3075b1787070210483d3e4845fE58d41c28438
+│   ├── RoleManager     - 0x59144e0730638f652B9717379c5CA634da7CE926
+│   ├── ModuleManager   - 0xa55eD5bb1a177d43f1A3FfC57dfd2c0cfe65d297
+│   ├── ModuleInspector - 0x517e3eFEE7205318eea5d3c51d0d0ABfaB648672
+│   └── Ownership       - 0x27f06726F9F29DCcf22e98030A3d34A090103605
 ├── libraries/
 │   ├── GridStorage.sol     ← Shared storage (AppStorage pattern)
 │   └── LibGrid.sol         ← Routing logic
@@ -136,13 +136,9 @@ All contracts compiled with:
 **Mainnet Verification:**
 - AIPGTokenV2: [BaseScan](https://basescan.org/address/0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608)
 - StakingVault: [BaseScan](https://basescan.org/address/0x3ED14A6D5A48614D77f313389611410d38fd8277)
+- Grid: [BaseScan](https://basescan.org/address/0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609)
 
-**Testnet Verification:**
-- Grid: [BaseScan Sepolia](https://sepolia.basescan.org/address/0xd66456855dF1A24064000556eef41341a1043FA2)
-
-**Networks**: 
-- Base Mainnet (Chain ID: 8453)
-- Base Sepolia (Chain ID: 84532)
+**Network**: Base Mainnet (Chain ID: 8453)
 
 ---
 

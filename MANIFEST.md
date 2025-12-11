@@ -17,8 +17,8 @@ Production smart contracts.
 | `StakingVault.sol` | ✅ Production | Synthetix-style staking |
 | `BondedWorkerRegistry.sol` | Reference | Worker registry with slashing |
 | `GridNFT.sol` | Reference | AI-generated art NFTs |
-| `ModelRegistry.sol` | Legacy | Replaced by Grid.ModelVault |
-| `RecipeVault.sol` | Legacy | Replaced by Grid.RecipeVault |
+| `ModelRegistry.sol` | Reference | Legacy standalone version |
+| `RecipeVault.sol` | Reference | Legacy standalone version |
 | `interfaces/` | - | Contract interfaces |
 
 ## contracts/grid/ (NEW)
