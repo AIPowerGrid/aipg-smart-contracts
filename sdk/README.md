@@ -11,7 +11,9 @@ GridNFT contract interactions for reading and creating AI-generated NFTs.
 Model registry interactions for querying AI models and constraints.
 
 ### recipevault-sdk.js
-Recipe vault interactions for storing and retrieving ComfyUI workflows.
+Recipe vault interactions for storing and retrieving ComfyUI workflows via the Grid Diamond.
+
+See `RECIPEVAULT_README.md` for full documentation and examples.
 
 ## Installation
 
@@ -42,6 +44,8 @@ console.log(ethers.formatEther(balance), 'AIPG');
 |----------|---------|
 | AIPGTokenV2 | `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608` |
 | StakingVault | `0x3ED14A6D5A48614D77f313389611410d38fd8277` |
+| Grid Diamond | `0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609` |
+| RecipeVault (module) | `0xddEC9d082FB2B45815Ee104947bfd556d4BD0aa1` |
 
 See `docs/ADDRESSES.md` for complete list.
 
