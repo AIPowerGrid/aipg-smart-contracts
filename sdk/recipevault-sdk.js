@@ -27,9 +27,13 @@ const Compression = {
   Brotli: 2
 };
 
+// Role constants
+const RECIPE_CREATOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes('RECIPE_CREATOR_ROLE'));
+const ADMIN_ROLE = ethers.keccak256(ethers.toUtf8Bytes('ADMIN_ROLE'));
+
 // ABI for RecipeVault functions exposed through the Grid Diamond
 const RECIPE_VAULT_ABI = [
-  // Write
+  // Write (requires RECIPE_CREATOR_ROLE or ADMIN_ROLE)
   "function storeRecipe(bytes32 recipeRoot, bytes calldata workflowData, bool canCreateNFTs, bool isPublic, uint8 compression, string calldata name, string calldata description) external returns (uint256 recipeId)",
   "function updateRecipePermissions(uint256 recipeId, bool canCreateNFTs, bool isPublic) external",
   
@@ -41,6 +45,7 @@ const RECIPE_VAULT_ABI = [
   "function getMaxWorkflowBytes() external view returns (uint256)",
   "function isRecipePublic(uint256 recipeId) external view returns (bool)",
   "function canRecipeCreateNFTs(uint256 recipeId) external view returns (bool)",
+  "function hasRole(bytes32 role, address account) external view returns (bool)",
   
   // Events
   "event RecipeStored(uint256 indexed recipeId, bytes32 indexed recipeRoot, address creator)",
@@ -119,6 +124,18 @@ class RecipeSDK {
     
     if (!metadata.name) {
       throw new Error('Recipe name is required');
+    }
+    
+    // Check role permission
+    const signerAddress = await this.signer.getAddress();
+    const hasCreatorRole = await this.contract.hasRole(RECIPE_CREATOR_ROLE, signerAddress);
+    const hasAdminRole = await this.contract.hasRole(ADMIN_ROLE, signerAddress);
+    
+    if (!hasCreatorRole && !hasAdminRole) {
+      throw new Error(
+        `Wallet ${signerAddress} lacks RECIPE_CREATOR_ROLE. ` +
+        `Contact admin (0xA218db26ed545f3476e6c3E827b595cf2E182533) to request access.`
+      );
     }
     
     // Compress workflow
