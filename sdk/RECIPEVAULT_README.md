@@ -33,9 +33,28 @@ npm install ethers@6 pako
 | Contract | Address |
 |----------|---------|
 | Grid Diamond | `0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609` |
-| RecipeVault Module | `0xddEC9d082FB2B45815Ee104947bfd556d4BD0aa1` |
+| RecipeVault Module | `0x58Dc9939FA30C6DE76776eCF24517721D53A9eA0` |
 
 > **Note:** All calls go through the Grid Diamond, which routes to the RecipeVault module.
+
+## Access Control
+
+**`storeRecipe()` requires `RECIPE_CREATOR_ROLE`** - not permissionless!
+
+| Role | Can Add Recipes | Can Read Recipes |
+|------|-----------------|------------------|
+| `RECIPE_CREATOR_ROLE` | ✅ Yes | ✅ Yes |
+| `ADMIN_ROLE` | ✅ Yes | ✅ Yes |
+| Anyone else | ❌ No | ✅ Yes |
+
+### Authorized Wallets
+
+| Address | Role |
+|---------|------|
+| `0xA218db26ed545f3476e6c3E827b595cf2E182533` | Admin |
+| `0xe2dddddf4dd22e98265bbf0e6bdc1cb3a4bb26a8` | Recipe Creator |
+
+To request access, contact the admin.
 
 ## API Reference
 

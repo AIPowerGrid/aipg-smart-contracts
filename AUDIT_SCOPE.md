@@ -67,7 +67,7 @@ Modular proxy contract (EIP-2535 pattern) combining all Grid compute infrastruct
 Grid.sol (Proxy) - 0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609
 ├── modules/
 │   ├── ModelVault      - 0xf2A3bA5C4b56E85e022c5079B645120CE7B6d199
-│   ├── RecipeVault     - 0xddEC9d082FB2B45815Ee104947bfd556d4BD0aa1
+│   ├── RecipeVault     - 0x58Dc9939FA30C6DE76776eCF24517721D53A9eA0
 │   ├── JobAnchor       - 0x1aee3a3e4F2C05814d86cF2426Cf20Ed5c1bfa32
 │   ├── WorkerRegistry  - 0x0a3075b1787070210483d3e4845fE58d41c28438
 │   ├── RoleManager     - 0x59144e0730638f652B9717379c5CA634da7CE926

@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 /**
- * TEST SCRIPT: Add Recipe to RecipeVault via Grid Diamond
+ * Add Recipe to RecipeVault via Grid Diamond
  * 
- * This script demonstrates adding the flux_krea_template.json workflow
- * to the RecipeVault module through the Grid Diamond contract.
+ * IMPORTANT: storeRecipe() requires RECIPE_CREATOR_ROLE
+ * Contact admin to get the role granted to your wallet.
  * 
  * Usage:
- *   node scripts/add-recipe-test.js --dry-run              # Test without submitting tx
- *   PRIVATE_KEY=0x... node scripts/add-recipe-test.js      # Actually submit tx
- *   
- *   Or with .env file containing PRIVATE_KEY
+ *   node scripts/add-recipe-test.js --dry-run              # Test without tx
+ *   PRIVATE_KEY=0x... node scripts/add-recipe-test.js      # Submit tx
  */
 
 require('dotenv').config();
@@ -21,81 +19,57 @@ const path = require('path');
 // ============ CONFIGURATION ============
 
 const CONFIG = {
-  // Base Mainnet
   RPC_URL: 'https://mainnet.base.org',
   CHAIN_ID: 8453,
   
-  // Grid Diamond Contract (routes to RecipeVault module)
+  // Grid Diamond Contract (all calls go through here)
   GRID_DIAMOND: '0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609',
   
-  // RecipeVault module address (for reference, calls go through diamond)
-  RECIPE_VAULT_MODULE: '0xddEC9d082FB2B45815Ee104947bfd556d4BD0aa1',
+  // RecipeVault module (upgraded 2026-01-04)
+  RECIPE_VAULT_MODULE: '0x58Dc9939FA30C6DE76776eCF24517721D53A9eA0',
 };
 
-// Compression enum matching Solidity
-const Compression = {
-  None: 0,
-  Gzip: 1,
-  Brotli: 2
-};
+// Role required to add recipes
+const RECIPE_CREATOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes('RECIPE_CREATOR_ROLE'));
+const ADMIN_ROLE = ethers.keccak256(ethers.toUtf8Bytes('ADMIN_ROLE'));
 
-// RecipeVault ABI (the diamond forwards calls to the module)
+const Compression = { None: 0, Gzip: 1, Brotli: 2 };
+
 const RECIPE_VAULT_ABI = [
-  // Write functions
+  // Write
   "function storeRecipe(bytes32 recipeRoot, bytes calldata workflowData, bool canCreateNFTs, bool isPublic, uint8 compression, string calldata name, string calldata description) external returns (uint256 recipeId)",
   "function updateRecipePermissions(uint256 recipeId, bool canCreateNFTs, bool isPublic) external",
-  "function setMaxWorkflowBytes(uint256 _maxBytes) external",
   
-  // Read functions
+  // Read
   "function getRecipe(uint256 recipeId) external view returns (tuple(uint256 recipeId, bytes32 recipeRoot, bytes workflowData, address creator, bool canCreateNFTs, bool isPublic, uint8 compression, uint256 createdAt, string name, string description))",
   "function getRecipeByRoot(bytes32 recipeRoot) external view returns (tuple(uint256 recipeId, bytes32 recipeRoot, bytes workflowData, address creator, bool canCreateNFTs, bool isPublic, uint8 compression, uint256 createdAt, string name, string description))",
   "function getCreatorRecipes(address creator) external view returns (uint256[])",
   "function getTotalRecipes() external view returns (uint256)",
   "function getMaxWorkflowBytes() external view returns (uint256)",
-  "function isRecipePublic(uint256 recipeId) external view returns (bool)",
-  "function canRecipeCreateNFTs(uint256 recipeId) external view returns (bool)",
+  "function hasRole(bytes32 role, address account) external view returns (bool)",
   
   // Events
   "event RecipeStored(uint256 indexed recipeId, bytes32 indexed recipeRoot, address creator)",
-  "event RecipePermissionsUpdated(uint256 indexed recipeId, bool canCreateNFTs, bool isPublic)"
 ];
 
-// ============ HELPER FUNCTIONS ============
+// ============ HELPERS ============
 
-/**
- * Load and normalize workflow JSON (replace template variables)
- */
 function loadWorkflowTemplate(templatePath, overrides = {}) {
   const raw = fs.readFileSync(templatePath, 'utf8');
-  let workflow = JSON.parse(raw);
-  
-  // Default template values (can be overridden)
   const defaults = {
-    '{{WIDTH}}': 1024,
-    '{{HEIGHT}}': 1024,
-    '{{SEED}}': 42,
-    '{{STEPS}}': 25,
-    '{{CFG}}': 3.5,
-    '{{SAMPLER}}': 'euler',
-    '{{SCHEDULER}}': 'simple',
-    '{{PROMPT}}': 'A beautiful landscape photograph',
+    '{{WIDTH}}': 1024, '{{HEIGHT}}': 1024, '{{SEED}}': 42,
+    '{{STEPS}}': 25, '{{CFG}}': 3.5, '{{SAMPLER}}': 'euler',
+    '{{SCHEDULER}}': 'simple', '{{PROMPT}}': 'A stunning photorealistic landscape',
     '{{MODEL_FILE}}': 'flux_krea.safetensors'
   };
-  
   const values = { ...defaults, ...overrides };
-  
-  // Replace template variables in the workflow JSON
-  let workflowStr = JSON.stringify(workflow);
+  let workflowStr = JSON.stringify(JSON.parse(raw));
   for (const [key, value] of Object.entries(values)) {
     workflowStr = workflowStr.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value);
   }
-  
   return JSON.parse(workflowStr);
 }
 
-/**
- * Compress workflow JSON using gzip
- */
 function compressWorkflow(workflowJson) {
   const jsonString = JSON.stringify(workflowJson);
   const compressed = pako.gzip(jsonString);
@@ -107,56 +81,50 @@ function compressWorkflow(workflowJson) {
   };
 }
 
-/**
- * Calculate recipe root (keccak256 of normalized JSON)
- */
 function calculateRecipeRoot(workflowJson) {
-  const jsonString = JSON.stringify(workflowJson);
-  return ethers.keccak256(ethers.toUtf8Bytes(jsonString));
+  return ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(workflowJson)));
 }
 
-/**
- * Format bytes for display
- */
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-// ============ MAIN SCRIPT ============
+// ============ MAIN ============
 
 async function main() {
   const DRY_RUN = process.argv.includes('--dry-run');
   
   console.log('\n╔════════════════════════════════════════════════════════════╗');
-  console.log('║       AIPG RecipeVault - Add Recipe Test Script            ║');
-  if (DRY_RUN) {
-    console.log('║                    🧪 DRY RUN MODE                          ║');
-  }
+  console.log('║       AIPG RecipeVault - Add Recipe                        ║');
+  if (DRY_RUN) console.log('║                    🧪 DRY RUN MODE                          ║');
   console.log('╚════════════════════════════════════════════════════════════╝\n');
 
-  // Check for private key (not needed for dry run)
   const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey && !DRY_RUN) {
-    console.error('❌ PRIVATE_KEY environment variable required');
+    console.error('❌ PRIVATE_KEY required');
     console.log('\nUsage:');
-    console.log('  node scripts/add-recipe-test.js --dry-run              # Test without tx');
-    console.log('  PRIVATE_KEY=0x... node scripts/add-recipe-test.js      # Submit tx');
-    console.log('\nOr create a .env file with:');
-    console.log('  PRIVATE_KEY=0x...');
+    console.log('  node scripts/add-recipe-test.js --dry-run');
+    console.log('  PRIVATE_KEY=0x... node scripts/add-recipe-test.js');
     process.exit(1);
   }
 
-  // Setup provider and signer
+  // Connect
   console.log('📡 Connecting to Base Mainnet...');
   const provider = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
+  const network = await provider.getNetwork();
+  console.log(`   Chain ID: ${network.chainId}`);
   
   let signer = null;
+  let signerAddress = null;
+  
   if (!DRY_RUN && privateKey) {
     signer = new ethers.Wallet(privateKey, provider);
-    console.log(`   Signer: ${signer.address}`);
-    const balance = await provider.getBalance(signer.address);
+    signerAddress = signer.address;
+    console.log(`   Signer: ${signerAddress}`);
+    
+    const balance = await provider.getBalance(signerAddress);
     console.log(`   Balance: ${ethers.formatEther(balance)} ETH`);
     
     if (balance === 0n) {
@@ -164,157 +132,143 @@ async function main() {
       process.exit(1);
     }
   }
-  
-  const network = await provider.getNetwork();
-  console.log(`   Chain ID: ${network.chainId}`);
 
-  // Connect to Grid Diamond (RecipeVault functions)
-  const recipeVault = new ethers.Contract(CONFIG.GRID_DIAMOND, RECIPE_VAULT_ABI, signer || provider);
-  
-  // Check current state
-  console.log('\n📊 Current RecipeVault State:');
-  const totalRecipes = await recipeVault.getTotalRecipes();
-  const maxBytes = await recipeVault.getMaxWorkflowBytes();
+  const contract = new ethers.Contract(CONFIG.GRID_DIAMOND, RECIPE_VAULT_ABI, signer || provider);
+
+  // Check role (if not dry run)
+  if (!DRY_RUN && signerAddress) {
+    console.log('\n🔐 Checking permissions...');
+    const hasCreatorRole = await contract.hasRole(RECIPE_CREATOR_ROLE, signerAddress);
+    const hasAdminRole = await contract.hasRole(ADMIN_ROLE, signerAddress);
+    
+    if (hasCreatorRole) {
+      console.log('   ✅ Has RECIPE_CREATOR_ROLE');
+    } else if (hasAdminRole) {
+      console.log('   ✅ Has ADMIN_ROLE (can create recipes)');
+    } else {
+      console.error('   ❌ Missing RECIPE_CREATOR_ROLE');
+      console.log('\n   Your wallet does not have permission to add recipes.');
+      console.log('   Contact the admin to grant RECIPE_CREATOR_ROLE to:');
+      console.log(`   ${signerAddress}`);
+      console.log('\n   Authorized wallets:');
+      console.log('   - 0xA218db26ed545f3476e6c3E827b595cf2E182533 (admin)');
+      console.log('   - 0xe2dddddf4dd22e98265bbf0e6bdc1cb3a4bb26a8');
+      process.exit(1);
+    }
+  }
+
+  // Check state
+  console.log('\n📊 RecipeVault State:');
+  const totalRecipes = await contract.getTotalRecipes();
+  const maxBytes = await contract.getMaxWorkflowBytes();
   console.log(`   Total Recipes: ${totalRecipes}`);
-  console.log(`   Max Workflow Size: ${formatBytes(Number(maxBytes))}`);
+  console.log(`   Max Size: ${formatBytes(Number(maxBytes))}`);
 
-  // Load the flux_krea_template.json
-  console.log('\n📂 Loading Flux KREA Template...');
-  const templatePath = path.join(__dirname, '..', 'flux_krea_template.json');
+  // Load template
+  console.log('\n📂 Loading Workflow Template...');
+  const templatePath = path.join(__dirname, '..', 'examples', 'flux_krea_template.json');
   
   if (!fs.existsSync(templatePath)) {
-    console.error(`❌ Template not found: ${templatePath}`);
-    process.exit(1);
+    // Try alternate path
+    const altPath = path.join(__dirname, '..', '..', 'production', 'flux_krea_template.json');
+    if (!fs.existsSync(altPath)) {
+      console.error('❌ Template not found');
+      console.log('   Expected: examples/flux_krea_template.json');
+      process.exit(1);
+    }
   }
   
-  // Load with default values filled in
-  const workflow = loadWorkflowTemplate(templatePath, {
-    '{{WIDTH}}': 1024,
-    '{{HEIGHT}}': 1024,
-    '{{SEED}}': 42,
-    '{{STEPS}}': 25,
-    '{{CFG}}': 3.5,
-    '{{SAMPLER}}': 'euler',
-    '{{SCHEDULER}}': 'simple',
-    '{{PROMPT}}': 'A stunning photorealistic landscape',
-    '{{MODEL_FILE}}': 'flux_krea.safetensors'
-  });
-  
-  console.log('   ✓ Loaded workflow template');
-  console.log(`   Nodes: ${Object.keys(workflow).length}`);
+  const workflow = loadWorkflowTemplate(fs.existsSync(templatePath) ? templatePath : path.join(__dirname, '..', '..', 'production', 'flux_krea_template.json'));
+  console.log(`   ✓ Loaded (${Object.keys(workflow).length} nodes)`);
 
-  // Compress the workflow
-  console.log('\n🗜️  Compressing Workflow...');
+  // Compress
+  console.log('\n🗜️  Compressing...');
   const compressed = compressWorkflow(workflow);
-  console.log(`   Original: ${formatBytes(compressed.originalSize)}`);
-  console.log(`   Compressed: ${formatBytes(compressed.compressedSize)}`);
-  console.log(`   Ratio: ${compressed.ratio}% reduction`);
-  
+  console.log(`   ${formatBytes(compressed.originalSize)} → ${formatBytes(compressed.compressedSize)} (${compressed.ratio}% reduction)`);
+
   if (maxBytes > 0n && BigInt(compressed.compressedSize) > maxBytes) {
     console.error(`❌ Workflow too large! Max: ${formatBytes(Number(maxBytes))}`);
     process.exit(1);
   }
 
-  // Calculate recipe root
+  // Recipe root
   const recipeRoot = calculateRecipeRoot(workflow);
-  console.log(`\n🔑 Recipe Root: ${recipeRoot}`);
+  console.log(`\n🔑 Recipe Root: ${recipeRoot.slice(0, 22)}...`);
 
-  // Check if recipe already exists
-  console.log('\n🔍 Checking if recipe exists...');
+  // Check exists
+  console.log('\n🔍 Checking if exists...');
   try {
-    const existing = await recipeVault.getRecipeByRoot(recipeRoot);
+    const existing = await contract.getRecipeByRoot(recipeRoot);
     if (existing.recipeId > 0n) {
-      console.log(`   ⚠️  Recipe already exists with ID: ${existing.recipeId}`);
+      console.log(`   ⚠️  Already exists: Recipe #${existing.recipeId}`);
       console.log(`   Name: ${existing.name}`);
       console.log(`   Creator: ${existing.creator}`);
-      console.log('\n   Skipping add. Use updateRecipePermissions to modify.');
       return;
     }
-  } catch (e) {
-    // Recipe doesn't exist, continue
-  }
+  } catch (e) {}
   console.log('   ✓ Recipe is new');
 
-  // Prepare recipe metadata
+  // Recipe details
   const recipeName = 'Flux KREA v1';
-  const recipeDescription = 'High-quality FLUX image generation workflow using KREA AI fine-tuned model. Supports 1024x1024 output with euler sampler.';
+  const recipeDescription = 'High-quality FLUX image generation workflow using KREA AI model.';
 
-  // Store the recipe
-  console.log('\n📝 Recipe Details:');
+  console.log('\n📝 Recipe:');
   console.log(`   Name: ${recipeName}`);
-  console.log(`   Description: ${recipeDescription.substring(0, 50)}...`);
   console.log(`   Can Create NFTs: true`);
   console.log(`   Is Public: true`);
-  console.log(`   Compression: Gzip`);
 
   if (DRY_RUN) {
     console.log('\n════════════════════════════════════════════════════════════════');
-    console.log('   🧪 DRY RUN COMPLETE - Transaction not submitted');
-    console.log('   ');
-    console.log('   To actually add this recipe, run:');
+    console.log('   🧪 DRY RUN COMPLETE');
+    console.log('');
+    console.log('   To submit, run with PRIVATE_KEY:');
     console.log('   PRIVATE_KEY=0x... node scripts/add-recipe-test.js');
+    console.log('');
+    console.log('   NOTE: Your wallet needs RECIPE_CREATOR_ROLE');
     console.log('════════════════════════════════════════════════════════════════\n');
     return;
   }
 
-  console.log('\n📤 Submitting Transaction...');
+  // Submit
+  console.log('\n📤 Submitting...');
   try {
-    const tx = await recipeVault.storeRecipe(
-      recipeRoot,
-      compressed.bytes,
-      true,  // canCreateNFTs
-      true,  // isPublic
-      Compression.Gzip,
-      recipeName,
-      recipeDescription
+    const tx = await contract.storeRecipe(
+      recipeRoot, compressed.bytes, true, true,
+      Compression.Gzip, recipeName, recipeDescription
     );
     
-    console.log(`   Transaction hash: ${tx.hash}`);
-    console.log('   ⏳ Waiting for confirmation...');
+    console.log(`   Tx: ${tx.hash}`);
+    console.log('   ⏳ Confirming...');
     
     const receipt = await tx.wait();
-    console.log(`   ✅ Confirmed in block ${receipt.blockNumber}`);
-    console.log(`   Gas used: ${receipt.gasUsed.toString()}`);
+    console.log(`   ✅ Block ${receipt.blockNumber} | Gas: ${receipt.gasUsed}`);
 
-    // Parse RecipeStored event
     const event = receipt.logs.find(log => {
-      try {
-        const parsed = recipeVault.interface.parseLog(log);
-        return parsed?.name === 'RecipeStored';
-      } catch { return false; }
+      try { return contract.interface.parseLog(log)?.name === 'RecipeStored'; }
+      catch { return false; }
     });
 
     if (event) {
-      const parsed = recipeVault.interface.parseLog(event);
-      const recipeId = parsed.args[0];
-      console.log(`\n🎉 Recipe Stored Successfully!`);
-      console.log(`   Recipe ID: ${recipeId}`);
-      console.log(`   Recipe Root: ${parsed.args[1]}`);
+      const parsed = contract.interface.parseLog(event);
+      console.log(`\n🎉 Recipe Stored!`);
+      console.log(`   ID: ${parsed.args[0]}`);
       console.log(`   Creator: ${parsed.args[2]}`);
-      
-      // Verify by reading back
-      console.log('\n🔎 Verifying stored recipe...');
-      const stored = await recipeVault.getRecipe(recipeId);
-      console.log(`   ✓ Name: ${stored.name}`);
-      console.log(`   ✓ Is Public: ${stored.isPublic}`);
-      console.log(`   ✓ Can Create NFTs: ${stored.canCreateNFTs}`);
-      console.log(`   ✓ Created At: ${new Date(Number(stored.createdAt) * 1000).toISOString()}`);
     }
     
   } catch (error) {
-    console.error('\n❌ Transaction failed:', error.message);
-    if (error.data) {
-      console.error('   Revert reason:', error.data);
+    console.error('\n❌ Failed:', error.message);
+    
+    if (error.message.includes('not recipe creator')) {
+      console.log('\n   Your wallet lacks RECIPE_CREATOR_ROLE.');
+      console.log('   Contact admin to get access.');
     }
     process.exit(1);
   }
 
   console.log('\n════════════════════════════════════════════════════════════════');
-  console.log('   Recipe added successfully! Other devs can now use the SDK');
-  console.log('   to add their own recipes using RecipeSDK.js');
+  console.log('   Recipe added! Retrieve it with:');
+  console.log('   await sdk.getRecipe(recipeId)');
   console.log('════════════════════════════════════════════════════════════════\n');
 }
 
-// Run
 main().catch(console.error);
-

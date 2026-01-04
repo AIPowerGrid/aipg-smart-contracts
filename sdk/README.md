@@ -45,7 +45,7 @@ console.log(ethers.formatEther(balance), 'AIPG');
 | AIPGTokenV2 | `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608` |
 | StakingVault | `0x3ED14A6D5A48614D77f313389611410d38fd8277` |
 | Grid Diamond | `0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609` |
-| RecipeVault (module) | `0xddEC9d082FB2B45815Ee104947bfd556d4BD0aa1` |
+| RecipeVault (module) | `0x58Dc9939FA30C6DE76776eCF24517721D53A9eA0` |
 
 See `docs/ADDRESSES.md` for complete list.
 
