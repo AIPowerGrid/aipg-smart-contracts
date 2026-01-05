@@ -27,3 +27,5 @@ These contracts are in development and will be deployed to mainnet after audit:
 ---
 
 **Note**: Only AIPGTokenV2 is production-deployed. All other contracts are testnet-only and planned for mainnet deployment in coming weeks after initial audit completion.
+
+**Last Verified:** January 5, 2025
