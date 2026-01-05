@@ -118,4 +118,5 @@ node scripts/interact-aipg-token.js
 ---
 
 **Network:** Base Mainnet (Chain ID: 8453)  
-**License:** MIT
+**License:** MIT  
+**Last Updated:** 2025-01-05
