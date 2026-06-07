@@ -79,6 +79,16 @@ library GridStorage {
         bool isSlashed;
     }
 
+    struct DenReport {
+        uint256 periodId;
+        bytes32 denRoot;
+        uint256 totalDen;
+        uint256 poolAllocation;
+        uint256 timestamp;
+        address reporter;
+        string ipfsUri;          // ipfs://<cid> pointing to full [worker, den] JSON for off-chain audit
+    }
+
     // ============ APP STORAGE ============
     
     struct AppStorage {
@@ -112,7 +122,17 @@ library GridStorage {
         address[] workerList;
         uint256 totalBonded;
         uint256 minBondAmount;
-        
+
+        // === REWARD POOL ===
+        uint256 totalDeposited;
+        uint256 totalPaidOut;
+        uint256 periodAllocation;        // AIPG released per period
+        uint256 periodLengthSeconds;     // default 86400 (1 day) if zero
+
+        // === DEN REPORTS ===
+        mapping(uint256 => DenReport) periodReports;
+        mapping(uint256 => mapping(address => bool)) periodClaimed;
+
         // === SHARED CONFIG ===
         address aipgToken;
         address stakingVault;
@@ -135,4 +155,6 @@ library GridStorage {
     bytes32 constant REGISTRAR_ROLE = keccak256("REGISTRAR_ROLE");
     bytes32 constant ANCHOR_ROLE = keccak256("ANCHOR_ROLE");
     bytes32 constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 constant REWARD_ADMIN_ROLE = keccak256("REWARD_ADMIN_ROLE");
+    bytes32 constant REPORTER_ROLE = keccak256("REPORTER_ROLE");
 }
