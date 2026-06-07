@@ -13,6 +13,11 @@ build/
 cache/
 artifacts/
 
+# Foundry
+out/
+lib/
+broadcast/
+
 # IDE
 .vscode/
 .idea/

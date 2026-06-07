@@ -81,5 +81,13 @@ contract RoleManager {
     function PAUSER_ROLE() external pure returns (bytes32) {
         return GridStorage.PAUSER_ROLE;
     }
+
+    function REWARD_ADMIN_ROLE() external pure returns (bytes32) {
+        return GridStorage.REWARD_ADMIN_ROLE;
+    }
+
+    function REPORTER_ROLE() external pure returns (bytes32) {
+        return GridStorage.REPORTER_ROLE;
+    }
 }
 
