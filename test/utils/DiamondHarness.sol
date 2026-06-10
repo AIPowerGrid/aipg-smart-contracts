@@ -228,16 +228,16 @@ abstract contract DiamondHarness is Test {
         //   slot 18: array workerList
         //   slot 19: uint totalBonded
         //   slot 20: uint minBondAmount
-        //   slot 21: uint totalDeposited
-        //   slot 22: uint totalPaidOut
-        //   slot 23: uint periodAllocation
-        //   slot 24: uint periodLengthSeconds
-        //   slot 25: mapping periodReports
-        //   slot 26: mapping periodClaimed
-        //   slot 27: address aipgToken
-        //   slot 28: address stakingVault
-        //   slot 29: bool paused
-        vm.store(grid, bytes32(uint256(base) + 27), bytes32(uint256(uint160(token))));
+        //   slot 21: address aipgToken      <- shared config kept before the
+        //   slot 22: address stakingVault      append-only zone so live facets'
+        //   slot 23: bool paused               storage layout is preserved
+        //   slot 24: uint totalDeposited    (append-only zone begins here)
+        //   slot 25: uint totalPaidOut
+        //   slot 26: uint periodAllocation
+        //   slot 27: uint periodLengthSeconds
+        //   slot 28: mapping periodReports
+        //   slot 29: mapping periodClaimed
+        vm.store(grid, bytes32(uint256(base) + 21), bytes32(uint256(uint160(token))));
     }
 
     function _grantRoleAtDiamondStorage(bytes32 role, address account) internal {

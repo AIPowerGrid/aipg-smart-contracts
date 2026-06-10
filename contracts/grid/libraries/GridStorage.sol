@@ -123,20 +123,30 @@ library GridStorage {
         uint256 totalBonded;
         uint256 minBondAmount;
 
-        // === REWARD POOL ===
+        // === SHARED CONFIG ===
+        address aipgToken;
+        address stakingVault;
+        bool paused;
+
+        // ====================================================================
+        // APPEND-ONLY ZONE (EIP-2535)
+        // Everything below was added AFTER the Diamond was deployed to Base
+        // mainnet. The live facets were compiled against the layout ending at
+        // `paused` above, so new fields MUST be appended here and NEVER
+        // inserted earlier — inserting earlier shifts every subsequent slot
+        // and corrupts state the live facets read/write. Same rule for any
+        // future additions: append at the bottom, never reorder.
+        // ====================================================================
+
+        // === REWARD POOL (added 2026-06) ===
         uint256 totalDeposited;
         uint256 totalPaidOut;
         uint256 periodAllocation;        // AIPG released per period
         uint256 periodLengthSeconds;     // default 86400 (1 day) if zero
 
-        // === DEN REPORTS ===
+        // === DEN REPORTS (added 2026-06) ===
         mapping(uint256 => DenReport) periodReports;
         mapping(uint256 => mapping(address => bool)) periodClaimed;
-
-        // === SHARED CONFIG ===
-        address aipgToken;
-        address stakingVault;
-        bool paused;
     }
 
     // ============ STORAGE ACCESS ============
