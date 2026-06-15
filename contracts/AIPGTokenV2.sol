@@ -145,12 +145,27 @@ contract AIPGTokenV2 is
     }
 
     /**
-     * @dev Override required by Solidity for multiple inheritance
+     * @dev Override required by Solidity for multiple inheritance.
+     * OpenZeppelin v4 hook: ERC20Pausable enforces the pause here; ERC20Capped
+     * enforces the supply cap via its own _mint override. (This matches the
+     * deployed v4 bytecode — the token reverts with v4 strings like
+     * "ERC20Pausable: token transfer while paused".)
      */
-    function _update(address from, address to, uint256 value)
+    function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal
-        override(ERC20, ERC20Capped, ERC20Pausable)
+        override(ERC20, ERC20Pausable)
     {
-        super._update(from, to, value);
+        super._beforeTokenTransfer(from, to, amount);
+    }
+
+    /**
+     * @dev Resolve the _mint override (ERC20 + ERC20Capped). super._mint routes
+     * through ERC20Capped's cap check, then ERC20's mint.
+     */
+    function _mint(address account, uint256 amount)
+        internal
+        override(ERC20, ERC20Capped)
+    {
+        super._mint(account, amount);
     }
 }
