@@ -16,23 +16,26 @@ AIPG=0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608
 RPC=${RPC:-https://mainnet.base.org}
 HWFLAG=${HWFLAG:---ledger}
 
-# ── EDIT THESE ──
-DEPOSIT_WEI=${DEPOSIT_WEI:-0}            # AIPG to seed the pool (18 dec). e.g. 1000000 ether
-ALLOCATION_WEI=${ALLOCATION_WEI:-0}      # AIPG released per period. e.g. 4080 ether
+# ── EDIT THESE (plain AIPG amounts — no wei, no zeros) ──
+DEPOSIT_AIPG=${DEPOSIT_AIPG:-0}          # AIPG to seed the pool, e.g. 100000
+ALLOCATION_AIPG=${ALLOCATION_AIPG:-0}    # AIPG released per period (day), e.g. 500
 REPORTER_BOT=${REPORTER_BOT:-}           # settlement bot hot-wallet address
 
-[ "$DEPOSIT_WEI" = "0" ] && { echo "Set DEPOSIT_WEI / ALLOCATION_WEI / REPORTER_BOT first."; exit 1; }
+[ "$DEPOSIT_AIPG" = "0" ] && { echo "Set DEPOSIT_AIPG / ALLOCATION_AIPG / REPORTER_BOT first."; exit 1; }
 
-# REPORTER_ROLE = keccak256("REPORTER_ROLE")
+# AIPG is 18-decimals, so on-chain amounts are AIPG * 1e18. cast does the zeros.
+DEPOSIT_WEI=$(cast to-wei "$DEPOSIT_AIPG" ether)
+ALLOCATION_WEI=$(cast to-wei "$ALLOCATION_AIPG" ether)
 REPORTER_ROLE=$(cast keccak "REPORTER_ROLE")
+echo "Depositing $DEPOSIT_AIPG AIPG ($DEPOSIT_WEI base units); allocation $ALLOCATION_AIPG AIPG/period."
 
-echo "1) approve($GRID, $DEPOSIT_WEI) on AIPG..."
+echo "1) approve($GRID, $DEPOSIT_AIPG AIPG) on AIPG..."
 cast send "$AIPG" "approve(address,uint256)" "$GRID" "$DEPOSIT_WEI" --rpc-url "$RPC" $HWFLAG
 
-echo "2) depositRewards($DEPOSIT_WEI)..."
+echo "2) depositRewards($DEPOSIT_AIPG AIPG)..."
 cast send "$GRID" "depositRewards(uint256)" "$DEPOSIT_WEI" --rpc-url "$RPC" $HWFLAG
 
-echo "3) setPeriodAllocation($ALLOCATION_WEI)..."
+echo "3) setPeriodAllocation($ALLOCATION_AIPG AIPG)..."
 cast send "$GRID" "setPeriodAllocation(uint256,string)" "$ALLOCATION_WEI" "launch" --rpc-url "$RPC" $HWFLAG
 
 if [ -n "$REPORTER_BOT" ]; then
