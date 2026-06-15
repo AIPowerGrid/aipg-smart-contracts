@@ -22,7 +22,7 @@
 
 ### Grid modules (facets behind the proxy)
 
-The proxy currently exposes **9 module implementations**:
+The proxy currently exposes **12 module implementations**:
 
 | Module | Implementation | Purpose |
 |--------|----------------|---------|
@@ -35,6 +35,9 @@ The proxy currently exposes **9 module implementations**:
 | RecipeVault | `0x58Dc9939FA30C6DE76776eCF24517721D53A9eA0` | ComfyUI workflow storage |
 | JobAnchor | `0x1aee3a3e4F2C05814d86cF2426Cf20Ed5c1bfa32` | Daily job anchoring |
 | WorkerRegistry | `0x0a3075b1787070210483d3e4845fE58d41c28438` | GPU worker registry |
+| RewardPool | `0x973a82955A3baC4d7d735330090FcE3FDB8E5082` | Period reward pool (deposit + allocation). Added 2026-06-15. |
+| DenReporter | `0xf06dEBc2556CeAc3caE09f934AC9aE9529760fd5` | Per-period den Merkle-root snapshots. Added 2026-06-15. |
+| PaymentRouter | `0x3fF26503539F3e85E136fDA20042Cf2B4E3Ac65A` | Merkle-proof worker payouts (claim/claimBatch). Added 2026-06-15. |
 
 > **Note — ModelVault spans two implementations.** The original facet
 > (`0xf2A3bA…`) serves the core ModelVault functions; the 2026-02-02 upgrade
@@ -52,18 +55,18 @@ The proxy currently exposes **9 module implementations**:
 
 ---
 
-## 🚧 In development (NOT deployed)
+## Reward / settlement layer (live as of 2026-06-15)
 
-These are in this repo under `contracts/grid/modules/` but are **not yet cut into
-the live diamond** — they are the on-chain reward/settlement layer, under active
-development and unaudited:
+The on-chain reward layer (RewardPool, DenReporter, PaymentRouter) is now cut
+into the diamond (see the module table above). Flow: the grid meters work-credit
+("den") off-chain, the settlement bot commits a per-period **Merkle root** of
+`[worker, den]` via `DenReporter.reportPeriod`, and workers (or a gas-only
+settlement bot) claim their pro-rata AIPG from `RewardPool` via
+`PaymentRouter.claim`/`claimBatch` with a Merkle proof.
 
-- **RewardPool** — period-based reward accounting/distribution
-- **PaymentRouter** — worker payout routing
-- **DenReporter** — per-period "den" (work-credit) reporting
-
-They depend on the append-only reward fields added to `GridStorage` and a reward
-role in `RoleManager` (also in-repo, not deployed). Do not treat these as live.
+> Reporting is gated by `REPORTER_ROLE`. Until validator challenges / federation
+> co-signing land, a single reporter's risk is bounded to one period's
+> allocation. Unaudited — proceed accordingly.
 
 ---
 
