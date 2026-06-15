@@ -294,4 +294,41 @@ contract ModelVault {
 
         return true;
     }
+
+    // ============ DEN MULTIPLIER ============
+    // On-chain "size" multiplier that drives a model's den (work-credit) reward.
+    // Stored scaled x1000 so fractional multipliers are exact (27.0 => 27000,
+    // 7.5 => 7500). The grid reads this on an interval, caches it, and prices
+    // den by it — so pricing is transparent and governable on-chain, and a
+    // worker can never inflate rewards by advertising a fake model name.
+
+    event DenMultiplierSet(uint256 indexed modelId, uint256 denMultiplierE3);
+
+    /// @notice Set one model's den multiplier (x1000). Admin only.
+    function setDenMultiplier(uint256 modelId, uint256 denMultiplierE3) external onlyAdmin {
+        GridStorage.AppStorage storage s = GridStorage.appStorage();
+        require(s.models[modelId].modelHash != bytes32(0), "ModelVault: not found");
+        s.denMultiplierE3[modelId] = denMultiplierE3;
+        emit DenMultiplierSet(modelId, denMultiplierE3);
+    }
+
+    /// @notice Batch-set den multipliers (gas-efficient repopulation). Admin only.
+    function setDenMultipliers(uint256[] calldata modelIds, uint256[] calldata multsE3)
+        external
+        onlyAdmin
+    {
+        require(modelIds.length == multsE3.length, "ModelVault: length mismatch");
+        GridStorage.AppStorage storage s = GridStorage.appStorage();
+        for (uint256 i = 0; i < modelIds.length; i++) {
+            require(s.models[modelIds[i]].modelHash != bytes32(0), "ModelVault: not found");
+            s.denMultiplierE3[modelIds[i]] = multsE3[i];
+            emit DenMultiplierSet(modelIds[i], multsE3[i]);
+        }
+    }
+
+    /// @notice Get a model's den multiplier (x1000). 0 = unset.
+    function getDenMultiplier(uint256 modelId) external view returns (uint256) {
+        GridStorage.AppStorage storage s = GridStorage.appStorage();
+        return s.denMultiplierE3[modelId];
+    }
 }
