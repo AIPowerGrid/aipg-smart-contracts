@@ -1,0 +1,23 @@
+{
+  "network": "base-mainnet",
+  "chainId": 8453,
+  "verifiedOnChain": "2026-06-15",
+  "core": {
+    "AIPGTokenV2": "0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608",
+    "StakingVault": "0x3ED14A6D5A48614D77f313389611410d38fd8277",
+    "Grid": "0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609"
+  },
+  "gridModules": {
+    "ModuleManager": "0xa55eD5bb1a177d43f1A3FfC57dfd2c0cfe65d297",
+    "ModuleInspector": "0x517e3eFEE7205318eea5d3c51d0d0ABfaB648672",
+    "Ownership": "0x27f06726F9F29DCcf22e98030A3d34A090103605",
+    "RoleManager": "0x59144e0730638f652B9717379c5CA634da7CE926",
+    "ModelVault": "0xf2A3bA5C4b56E85e022c5079B645120CE7B6d199",
+    "ModelVaultAdminUpdates": "0xffFbEb80dBA87a7f9004757E55a581d6A988B839",
+    "RecipeVault": "0x58Dc9939FA30C6DE76776eCF24517721D53A9eA0",
+    "JobAnchor": "0x1aee3a3e4F2C05814d86cF2426Cf20Ed5c1bfa32",
+    "WorkerRegistry": "0x0a3075b1787070210483d3e4845fE58d41c28438"
+  },
+  "admin": "0xA218db26ed545f3476e6c3E827b595cf2E182533",
+  "notDeployed": ["RewardPool", "PaymentRouter", "DenReporter"]
+}
