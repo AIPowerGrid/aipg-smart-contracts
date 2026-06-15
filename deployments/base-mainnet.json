@@ -16,8 +16,13 @@
     "ModelVaultAdminUpdates": "0xffFbEb80dBA87a7f9004757E55a581d6A988B839",
     "RecipeVault": "0x58Dc9939FA30C6DE76776eCF24517721D53A9eA0",
     "JobAnchor": "0x1aee3a3e4F2C05814d86cF2426Cf20Ed5c1bfa32",
-    "WorkerRegistry": "0x0a3075b1787070210483d3e4845fE58d41c28438"
+    "WorkerRegistry": "0x0a3075b1787070210483d3e4845fE58d41c28438",
+    "RewardPool": "0x973a82955A3baC4d7d735330090FcE3FDB8E5082",
+    "DenReporter": "0xf06dEBc2556CeAc3caE09f934AC9aE9529760fd5",
+    "PaymentRouter": "0x3fF26503539F3e85E136fDA20042Cf2B4E3Ac65A"
   },
   "admin": "0xA218db26ed545f3476e6c3E827b595cf2E182533",
-  "notDeployed": ["RewardPool", "PaymentRouter", "DenReporter"]
+  "notDeployed": [],
+  "rewardFacetsDeployed": "2026-06-15",
+  "moduleCount": 12
 }
