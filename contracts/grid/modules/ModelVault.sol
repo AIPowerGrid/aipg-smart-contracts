@@ -127,6 +127,57 @@ contract ModelVault {
         emit ModelVersionUpdated(modelId, oldVersion, newVersion);
     }
 
+    function updateBaseModel(uint256 modelId, string calldata newBaseModel) external onlyAdmin {
+        GridStorage.AppStorage storage s = GridStorage.appStorage();
+        require(s.models[modelId].modelHash != bytes32(0), "ModelVault: not found");
+        
+        s.models[modelId].baseModel = newBaseModel;
+    }
+
+    function updateModelMetadata(
+        uint256 modelId,
+        string calldata fileName,
+        string calldata name,
+        string calldata version,
+        string calldata quantization,
+        string calldata format,
+        uint32 vramMB,
+        string calldata baseModel,
+        uint256 sizeBytes
+    ) external onlyAdmin {
+        GridStorage.AppStorage storage s = GridStorage.appStorage();
+        require(s.models[modelId].modelHash != bytes32(0), "ModelVault: not found");
+        
+        GridStorage.Model storage m = s.models[modelId];
+        m.fileName = fileName;
+        m.name = name;
+        m.version = version;
+        m.quantization = quantization;
+        m.format = format;
+        m.vramMB = vramMB;
+        m.baseModel = baseModel;
+        m.sizeBytes = sizeBytes;
+    }
+
+    function updateModelCapabilities(
+        uint256 modelId,
+        bool inpainting,
+        bool img2img,
+        bool controlnet,
+        bool lora,
+        bool isNSFW
+    ) external onlyAdmin {
+        GridStorage.AppStorage storage s = GridStorage.appStorage();
+        require(s.models[modelId].modelHash != bytes32(0), "ModelVault: not found");
+        
+        GridStorage.Model storage m = s.models[modelId];
+        m.inpainting = inpainting;
+        m.img2img = img2img;
+        m.controlnet = controlnet;
+        m.lora = lora;
+        m.isNSFW = isNSFW;
+    }
+
     function deprecateModel(uint256 modelId) external onlyRegistrar {
         GridStorage.AppStorage storage s = GridStorage.appStorage();
         require(s.models[modelId].modelHash != bytes32(0), "ModelVault: not found");
