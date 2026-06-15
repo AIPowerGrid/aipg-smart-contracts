@@ -147,6 +147,14 @@ library GridStorage {
         // === DEN REPORTS (added 2026-06) ===
         mapping(uint256 => DenReport) periodReports;
         mapping(uint256 => mapping(address => bool)) periodClaimed;
+
+        // === MODEL DEN MULTIPLIER (added 2026-06) ===
+        // Per-model reward "size" multiplier, scaled x1000 (e.g. a 27B model
+        // => 27000). Sourced on-chain so den pricing is transparent and
+        // governable; the off-chain grid caches this on an interval and never
+        // derives a multiplier from the model name. 0 = unset (grid applies its
+        // conservative DEFAULT_MULTIPLIER). Appended per the rule above.
+        mapping(uint256 => uint256) denMultiplierE3;
     }
 
     // ============ STORAGE ACCESS ============
