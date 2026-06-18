@@ -70,7 +70,7 @@ moves real money and is immutable once deployed.
 - **Production vs reference:** `AIPGTokenV2`, `StakingVault`, and the `grid/` Diamond are live.
   Standalone `ModelRegistry.sol`, `RecipeVault.sol`, `BondedWorkerRegistry.sol`, `GridNFT.sol`
   are reference/superseded — the live equivalents are Diamond facets. Do not confuse them.
-- **Off-chain pairing:** the den economy here mirrors `system-core/grid_api/services/den.py`
+- **Off-chain pairing:** the den economy here mirrors `grid-core/grid_api/services/den.py`
   (off-chain den formula) and the settlement bot (cumulative Merkle roots). On-chain stores
   only per-period roots + totals, never per-job/per-worker rows.
 - **Token minting is renounced** (150M fixed cap). No code path may assume new mint authority.

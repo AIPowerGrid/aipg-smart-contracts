@@ -31,7 +31,7 @@ and the reward/settlement economy.
   period-length config (admin-gated). Pool balance and payout rate are intentionally decoupled.
 - `DenReporter.sol` — trusted reporter commits per-period den snapshots as Merkle roots (leaves =
   sorted `[worker, den]`). On-chain stores only roots + totals; the formula is off-chain
-  (`system-core/grid_api/services/den.py`).
+  (`grid-core/grid_api/services/den.py`).
 - `PaymentRouter.sol` — permissionless claim: anyone submits a worker's Merkle proof against the
   period den root; `amount = (workerDen / totalDen) * poolAllocation`; AIPG always goes to the
   leaf's worker address. Each `(periodId, worker)` claimable **exactly once**.
