@@ -7,13 +7,13 @@ import "./utils/DiamondHarness.sol";
 contract PaymentRouterTest is DiamondHarness {
     // Period setup constants
     uint256 internal periodId;
-    uint256 internal constant POOL = 4_080 ether;   // matches 1%/yr daily allocation
+    uint256 internal constant POOL = 4_080 ether; // matches 1%/yr daily allocation
     uint256 internal constant TOTAL_DEN = 6_000;
 
     // A 3-leaf tree
-    bytes32 internal leaf1;  // worker1 has 1000 den → 680 ether
-    bytes32 internal leaf2;  // worker2 has 2000 den → 1360 ether
-    bytes32 internal leaf3;  // worker3 has 3000 den → 2040 ether
+    bytes32 internal leaf1; // worker1 has 1000 den → 680 ether
+    bytes32 internal leaf2; // worker2 has 2000 den → 1360 ether
+    bytes32 internal leaf3; // worker3 has 3000 den → 2040 ether
     bytes32 internal root;
     bytes32[] internal proof1;
     bytes32[] internal proof2;
@@ -122,11 +122,17 @@ contract PaymentRouterTest is DiamondHarness {
 
     function test_claimBatch_paysAllThree() public {
         address[] memory ws = new address[](3);
-        ws[0] = worker1; ws[1] = worker2; ws[2] = worker3;
+        ws[0] = worker1;
+        ws[1] = worker2;
+        ws[2] = worker3;
         uint256[] memory dens = new uint256[](3);
-        dens[0] = 1_000; dens[1] = 2_000; dens[2] = 3_000;
+        dens[0] = 1_000;
+        dens[1] = 2_000;
+        dens[2] = 3_000;
         bytes32[][] memory proofs = new bytes32[][](3);
-        proofs[0] = proof1; proofs[1] = proof2; proofs[2] = proof3;
+        proofs[0] = proof1;
+        proofs[1] = proof2;
+        proofs[2] = proof3;
 
         payments.claimBatch(periodId, ws, dens, proofs);
 
@@ -138,11 +144,17 @@ contract PaymentRouterTest is DiamondHarness {
     function test_claimBatch_skipsBadRowDoesNotRevert() public {
         // Mix in one bad-proof row; the rest should still succeed.
         address[] memory ws = new address[](3);
-        ws[0] = worker1; ws[1] = worker2; ws[2] = worker3;
+        ws[0] = worker1;
+        ws[1] = worker2;
+        ws[2] = worker3;
         uint256[] memory dens = new uint256[](3);
-        dens[0] = 1_000; dens[1] = 999; dens[2] = 3_000;     // worker2 has wrong den value
+        dens[0] = 1_000; // worker2 has wrong den value
+        dens[1] = 999;
+        dens[2] = 3_000;
         bytes32[][] memory proofs = new bytes32[][](3);
-        proofs[0] = proof1; proofs[1] = proof2; proofs[2] = proof3;
+        proofs[0] = proof1;
+        proofs[1] = proof2;
+        proofs[2] = proof3;
 
         payments.claimBatch(periodId, ws, dens, proofs);
 
@@ -160,11 +172,14 @@ contract PaymentRouterTest is DiamondHarness {
         uint256 balBefore = aipg.balanceOf(worker1);
 
         address[] memory ws = new address[](2);
-        ws[0] = worker1; ws[1] = worker2;
+        ws[0] = worker1;
+        ws[1] = worker2;
         uint256[] memory dens = new uint256[](2);
-        dens[0] = 1_000; dens[1] = 2_000;
+        dens[0] = 1_000;
+        dens[1] = 2_000;
         bytes32[][] memory proofs = new bytes32[][](2);
-        proofs[0] = proof1; proofs[1] = proof2;
+        proofs[0] = proof1;
+        proofs[1] = proof2;
 
         payments.claimBatch(periodId, ws, dens, proofs);
 
@@ -218,12 +233,70 @@ contract PaymentRouterTest is DiamondHarness {
         payments.claim(worker1, periodId, 1_000, proof1);
     }
 
+    function test_claim_periodCapBoundsCorruptReport() public {
+        uint256 badPeriod = periodId + 1;
+        vm.warp((badPeriod + 1) * 86400 + 1);
+
+        bytes32 la = _leaf(worker1, 1_000);
+        bytes32 lb = _leaf(worker2, 1_000);
+        bytes32 badRoot = _hashPair(la, lb);
+
+        // The root contains 2,000 den, but the reporter understates totalDen as
+        // 1,000. Without a per-period cap each worker computes a whole-pool share.
+        vm.prank(reporter);
+        reporterFacet.reportPeriod(badPeriod, badRoot, 1_000, "");
+
+        bytes32[] memory proofA = new bytes32[](1);
+        proofA[0] = lb;
+        bytes32[] memory proofB = new bytes32[](1);
+        proofB[0] = la;
+
+        payments.claim(worker1, badPeriod, 1_000, proofA);
+        assertEq(aipg.balanceOf(worker1), POOL);
+
+        vm.expectRevert(bytes("PaymentRouter: period overpay"));
+        payments.claim(worker2, badPeriod, 1_000, proofB);
+
+        assertEq(aipg.balanceOf(worker2), 0);
+        assertFalse(payments.isClaimed(badPeriod, worker2));
+    }
+
+    function test_claimBatch_periodCapRevertsWholeCorruptBatch() public {
+        uint256 badPeriod = periodId + 1;
+        vm.warp((badPeriod + 1) * 86400 + 1);
+
+        bytes32 la = _leaf(worker1, 1_000);
+        bytes32 lb = _leaf(worker2, 1_000);
+        vm.prank(reporter);
+        reporterFacet.reportPeriod(badPeriod, _hashPair(la, lb), 1_000, "");
+
+        address[] memory ws = new address[](2);
+        ws[0] = worker1;
+        ws[1] = worker2;
+        uint256[] memory dens = new uint256[](2);
+        dens[0] = 1_000;
+        dens[1] = 1_000;
+        bytes32[][] memory proofs = new bytes32[][](2);
+        proofs[0] = new bytes32[](1);
+        proofs[0][0] = lb;
+        proofs[1] = new bytes32[](1);
+        proofs[1][0] = la;
+
+        vm.expectRevert(bytes("PaymentRouter: period overpay"));
+        payments.claimBatch(badPeriod, ws, dens, proofs);
+
+        assertEq(aipg.balanceOf(worker1), 0);
+        assertEq(aipg.balanceOf(worker2), 0);
+        assertFalse(payments.isClaimed(badPeriod, worker1));
+        assertFalse(payments.isClaimed(badPeriod, worker2));
+    }
+
     // -------- helpers --------
 
     function _sortBytes32(bytes32[] memory arr) internal pure {
         // tiny bubble sort, n is small in tests
-        for (uint i = 0; i < arr.length; i++) {
-            for (uint j = i + 1; j < arr.length; j++) {
+        for (uint256 i = 0; i < arr.length; i++) {
+            for (uint256 j = i + 1; j < arr.length; j++) {
                 if (arr[i] > arr[j]) {
                     (arr[i], arr[j]) = (arr[j], arr[i]);
                 }
@@ -264,11 +337,107 @@ contract PaymentRouterTest is DiamondHarness {
         returns (bool)
     {
         bytes32 computed = leaf;
-        for (uint i = 0; i < proof.length; i++) {
+        for (uint256 i = 0; i < proof.length; i++) {
             computed = computed <= proof[i]
                 ? keccak256(abi.encodePacked(computed, proof[i]))
                 : keccak256(abi.encodePacked(proof[i], computed));
         }
         return computed == expectedRoot;
+    }
+}
+
+contract PaymentRouterCollateralHandler {
+    PaymentRouter internal payments;
+    uint256 internal periodId;
+    address internal worker;
+    uint256 internal workerDen;
+
+    constructor(PaymentRouter _payments, uint256 _periodId, address _worker, uint256 _workerDen) {
+        payments = _payments;
+        periodId = _periodId;
+        worker = _worker;
+        workerDen = _workerDen;
+    }
+
+    function claim() external {
+        bytes32[] memory proof = new bytes32[](0);
+        try payments.claim(worker, periodId, workerDen, proof) {} catch {}
+    }
+
+    function claimBatch() external {
+        address[] memory workers = new address[](1);
+        workers[0] = worker;
+        uint256[] memory dens = new uint256[](1);
+        dens[0] = workerDen;
+        bytes32[][] memory proofs = new bytes32[][](1);
+        proofs[0] = new bytes32[](0);
+        try payments.claimBatch(periodId, workers, dens, proofs) {} catch {}
+    }
+}
+
+contract PaymentRouterCollateralSafetyTest is DiamondHarness {
+    uint256 internal constant BOND = 1_000 ether;
+    uint256 internal constant CLAIM_ALLOCATION = 500 ether;
+    uint256 internal periodId;
+    PaymentRouterCollateralHandler internal handler;
+
+    function setUp() public override {
+        super.setUp();
+
+        aipg.mint(worker1, BOND);
+        vm.startPrank(worker1);
+        aipg.approve(grid, BOND);
+        workerReg.registerWorker(BOND);
+        vm.stopPrank();
+
+        vm.prank(pricingAdmin);
+        pool.setPeriodAllocation(CLAIM_ALLOCATION, "underfunded regression");
+
+        periodId = block.timestamp / 86400;
+        vm.warp((periodId + 1) * 86400 + 1);
+
+        vm.prank(reporter);
+        reporterFacet.reportPeriod(periodId, _leaf(worker2, 1_000), 1_000, "");
+
+        handler = new PaymentRouterCollateralHandler(payments, periodId, worker2, 1_000);
+        targetContract(address(handler));
+    }
+
+    function test_claim_revertsBeforeConsumingBondedCollateralWhenRewardsUnderfunded() public {
+        bytes32[] memory proof = new bytes32[](0);
+
+        vm.expectRevert(bytes("exceeds rewards"));
+        payments.claim(worker2, periodId, 1_000, proof);
+
+        assertEq(aipg.balanceOf(grid), BOND);
+        assertEq(workerReg.getTotalBonded(), BOND);
+        assertEq(pool.totalPaidOut(), 0);
+        assertFalse(payments.isClaimed(periodId, worker2));
+        assertGe(aipg.balanceOf(grid), workerReg.getTotalBonded());
+    }
+
+    function test_claimBatch_revertsBeforeConsumingBondedCollateralWhenRewardsUnderfunded() public {
+        address[] memory workers = new address[](1);
+        workers[0] = worker2;
+        uint256[] memory dens = new uint256[](1);
+        dens[0] = 1_000;
+        bytes32[][] memory proofs = new bytes32[][](1);
+        proofs[0] = new bytes32[](0);
+
+        vm.expectRevert(bytes("exceeds rewards"));
+        payments.claimBatch(periodId, workers, dens, proofs);
+
+        assertEq(aipg.balanceOf(grid), BOND);
+        assertEq(workerReg.getTotalBonded(), BOND);
+        assertEq(pool.totalPaidOut(), 0);
+        assertFalse(payments.isClaimed(periodId, worker2));
+        assertGe(aipg.balanceOf(grid), workerReg.getTotalBonded());
+    }
+
+    function invariant_diamondBalanceCoversBondedCollateral() public view {
+        require(
+            aipg.balanceOf(grid) >= workerReg.getTotalBonded(),
+            "invariant: bonds undercollateralized"
+        );
     }
 }

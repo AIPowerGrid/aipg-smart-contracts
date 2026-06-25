@@ -9,10 +9,14 @@ library GridStorage {
     bytes32 constant STORAGE_POSITION = keccak256("aipg.grid.storage");
 
     // ============ ENUMS ============
-    enum ModelType { TEXT_MODEL, IMAGE_MODEL, VIDEO_MODEL }
+    enum ModelType {
+        TEXT_MODEL,
+        IMAGE_MODEL,
+        VIDEO_MODEL
+    }
 
     // ============ STRUCTS ============
-    
+
     struct Model {
         bytes32 modelHash;
         ModelType modelType;
@@ -77,6 +81,13 @@ library GridStorage {
         uint256 registeredAt;
         bool isActive;
         bool isSlashed;
+        // APPEND-ONLY (added 2026-06): timestamp at which a requested unbond can
+        // be withdrawn. 0 = no unbond in progress. Appended to the END of the
+        // struct so existing workers (whose slot for this field is zero) and the
+        // already-deployed facets that read the 7-field struct are unaffected —
+        // each Worker lives at its own keccak-spaced region, so a trailing field
+        // just consumes the next, previously-zero slot. NEVER reorder.
+        uint256 unbondingAt;
     }
 
     struct DenReport {
@@ -86,22 +97,22 @@ library GridStorage {
         uint256 poolAllocation;
         uint256 timestamp;
         address reporter;
-        string ipfsUri;          // ipfs://<cid> pointing to full [worker, den] JSON for off-chain audit
+        string ipfsUri; // ipfs://<cid> pointing to full [worker, den] JSON for off-chain audit
     }
 
     // ============ APP STORAGE ============
-    
+
     struct AppStorage {
         // === ROLES (shared across all modules) ===
         mapping(bytes32 => mapping(address => bool)) roles;
         mapping(bytes32 => bytes32) roleAdmin;
-        
+
         // === MODEL VAULT ===
         uint256 modelIdCounter;
         mapping(uint256 => Model) models;
         mapping(bytes32 => uint256) hashToModelId;
         mapping(bytes32 => ModelConstraints) modelConstraints;
-        
+
         // === RECIPE VAULT ===
         uint256 nextRecipeId;
         uint256 totalRecipes;
@@ -109,14 +120,14 @@ library GridStorage {
         mapping(bytes32 => uint256) recipeRootToId;
         mapping(address => uint256[]) creatorRecipes;
         uint256 maxWorkflowBytes;
-        
+
         // === JOB ANCHOR ===
         mapping(uint256 => DailyAnchor) dailyAnchors;
         mapping(bytes32 => bool) anchoredJobIds;
         mapping(address => uint256[]) workerJobDays;
         uint256 totalAnchoredJobs;
         uint256 totalAnchoredRewards;
-        
+
         // === WORKER REGISTRY ===
         mapping(address => Worker) workers;
         address[] workerList;
@@ -141,8 +152,8 @@ library GridStorage {
         // === REWARD POOL (added 2026-06) ===
         uint256 totalDeposited;
         uint256 totalPaidOut;
-        uint256 periodAllocation;        // AIPG released per period
-        uint256 periodLengthSeconds;     // default 86400 (1 day) if zero
+        uint256 periodAllocation; // AIPG released per period
+        uint256 periodLengthSeconds; // default 86400 (1 day) if zero
 
         // === DEN REPORTS (added 2026-06) ===
         mapping(uint256 => DenReport) periodReports;
@@ -155,10 +166,22 @@ library GridStorage {
         // derives a multiplier from the model name. 0 = unset (grid applies its
         // conservative DEFAULT_MULTIPLIER). Appended per the rule above.
         mapping(uint256 => uint256) denMultiplierE3;
+
+        // === WORKER UNBONDING COOLDOWN (added 2026-06) ===
+        // Seconds a worker must wait between requesting an unbond and being able
+        // to withdraw their bond. The cooldown is what makes bonds slashable:
+        // misbehavior detected after a worker quits can still be punished while
+        // funds sit in the cooldown. 0 = use DEFAULT_UNBONDING_PERIOD. Appended.
+        uint256 unbondingPeriodSeconds;
+
+        // === PAYMENT ROUTER PER-PERIOD CAPS (added 2026-06) ===
+        // Tracks how much each den report has paid so a corrupt or compromised
+        // report cannot pay more than its snapshotted poolAllocation.
+        mapping(uint256 => uint256) paidPerPeriod;
     }
 
     // ============ STORAGE ACCESS ============
-    
+
     function appStorage() internal pure returns (AppStorage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
@@ -167,7 +190,7 @@ library GridStorage {
     }
 
     // ============ ROLE CONSTANTS ============
-    
+
     bytes32 constant DEFAULT_ADMIN_ROLE = 0x00;
     bytes32 constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 constant REGISTRAR_ROLE = keccak256("REGISTRAR_ROLE");
@@ -175,4 +198,7 @@ library GridStorage {
     bytes32 constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 constant REWARD_ADMIN_ROLE = keccak256("REWARD_ADMIN_ROLE");
     bytes32 constant REPORTER_ROLE = keccak256("REPORTER_ROLE");
+    // Can slash bonded workers (forged receipts, repeated bad results). Held by
+    // the grid's settlement/enforcement key, never by the hot request path.
+    bytes32 constant SLASHER_ROLE = keccak256("SLASHER_ROLE");
 }

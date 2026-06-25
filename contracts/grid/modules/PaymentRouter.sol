@@ -48,12 +48,10 @@ contract PaymentRouter {
      *      a team settlement bot, or any third party. Payout always goes to the
      *      `worker` address in the leaf.
      */
-    function claim(
-        address worker,
-        uint256 periodId,
-        uint256 workerDen,
-        bytes32[] calldata proof
-    ) external notPaused {
+    function claim(address worker, uint256 periodId, uint256 workerDen, bytes32[] calldata proof)
+        external
+        notPaused
+    {
         _claim(worker, periodId, workerDen, proof);
     }
 
@@ -89,12 +87,9 @@ contract PaymentRouter {
     /**
      * @dev Single-claim path that reverts on failure. Used by direct claim().
      */
-    function _claim(
-        address worker,
-        uint256 periodId,
-        uint256 workerDen,
-        bytes32[] calldata proof
-    ) internal {
+    function _claim(address worker, uint256 periodId, uint256 workerDen, bytes32[] calldata proof)
+        internal
+    {
         require(worker != address(0), "PaymentRouter: zero worker");
         require(workerDen > 0, "PaymentRouter: zero den");
 
@@ -109,9 +104,13 @@ contract PaymentRouter {
 
         uint256 amount = (workerDen * report.poolAllocation) / report.totalDen;
         require(amount > 0, "PaymentRouter: zero payout");
+        uint256 newPeriodPaid = s.paidPerPeriod[periodId] + amount;
+        require(newPeriodPaid <= report.poolAllocation, "PaymentRouter: period overpay");
+        require(s.totalPaidOut + amount <= s.totalDeposited, "exceeds rewards");
 
         // CEI: mark claimed before transferring.
         s.periodClaimed[periodId][worker] = true;
+        s.paidPerPeriod[periodId] = newPeriodPaid;
         s.totalPaidOut += amount;
 
         GridStorage.Worker storage w = s.workers[worker];
@@ -120,8 +119,7 @@ contract PaymentRouter {
         }
 
         require(
-            IERC20Transfer(s.aipgToken).transfer(worker, amount),
-            "PaymentRouter: transfer failed"
+            IERC20Transfer(s.aipgToken).transfer(worker, amount), "PaymentRouter: transfer failed"
         );
 
         emit Claimed(periodId, worker, msg.sender, workerDen, amount);
@@ -148,8 +146,12 @@ contract PaymentRouter {
 
         uint256 amount = (workerDen * report.poolAllocation) / report.totalDen;
         if (amount == 0) return;
+        uint256 newPeriodPaid = s.paidPerPeriod[periodId] + amount;
+        require(newPeriodPaid <= report.poolAllocation, "PaymentRouter: period overpay");
+        require(s.totalPaidOut + amount <= s.totalDeposited, "exceeds rewards");
 
         s.periodClaimed[periodId][worker] = true;
+        s.paidPerPeriod[periodId] = newPeriodPaid;
         s.totalPaidOut += amount;
 
         GridStorage.Worker storage w = s.workers[worker];
@@ -157,7 +159,9 @@ contract PaymentRouter {
             w.totalRewardsEarned += amount;
         }
 
-        if (!IERC20Transfer(s.aipgToken).transfer(worker, amount)) return;
+        require(
+            IERC20Transfer(s.aipgToken).transfer(worker, amount), "PaymentRouter: transfer failed"
+        );
 
         emit Claimed(periodId, worker, msg.sender, workerDen, amount);
     }
@@ -181,7 +185,8 @@ contract PaymentRouter {
         if (!_verify(proof, report.denRoot, leaf)) return (0, false);
 
         amount = (workerDen * report.poolAllocation) / report.totalDen;
-        valid = true;
+        valid = amount > 0 && s.paidPerPeriod[periodId] + amount <= report.poolAllocation
+            && s.totalPaidOut + amount <= s.totalDeposited;
     }
 
     function isClaimed(uint256 periodId, address worker) external view returns (bool) {
@@ -190,11 +195,11 @@ contract PaymentRouter {
 
     // ============ INTERNAL ============
 
-    function _verify(
-        bytes32[] calldata proof,
-        bytes32 root,
-        bytes32 leaf
-    ) internal pure returns (bool) {
+    function _verify(bytes32[] calldata proof, bytes32 root, bytes32 leaf)
+        internal
+        pure
+        returns (bool)
+    {
         bytes32 computed = leaf;
         for (uint256 i = 0; i < proof.length; i++) {
             bytes32 sibling = proof[i];

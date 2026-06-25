@@ -12,6 +12,22 @@ npm install
 
 Read-only interaction with AIPGTokenV2 contract.
 
+## deployment/deploy-grid-security-upgrade.sh
+
+Preferred mainnet path for the Grid reward/bonding security upgrade. It runs the
+offline Foundry suite, deploys only the changed `PaymentRouter` and
+`WorkerRegistry` facets, classifies selectors as ADD or REPLACE, applies one
+atomic `updateModules` cut, and verifies every selector routes to the new facet.
+
+```bash
+CONFIRM=YES RPC=https://mainnet.base.org HWFLAG=--ledger \
+  ./scripts/deployment/deploy-grid-security-upgrade.sh
+```
+
+Use `SKIP_TESTS=1` only after the exact commit has already passed locally or in
+CI. If local Foundry RPC calls hit the macOS proxy panic, run the deploy from a
+Linux shell/CI runner with the same hardware-wallet or multisig signing process.
+
 **Usage:**
 
 ```bash

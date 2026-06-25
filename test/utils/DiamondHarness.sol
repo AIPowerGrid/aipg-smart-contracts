@@ -35,6 +35,7 @@ abstract contract DiamondHarness is Test {
     address internal pricingAdmin = makeAddr("pricingAdmin");
     address internal reporter = makeAddr("reporter");
     address internal pauser = makeAddr("pauser");
+    address internal slasher = makeAddr("slasher");
     address internal user = makeAddr("user");
     address internal worker1 = makeAddr("worker1");
     address internal worker2 = makeAddr("worker2");
@@ -109,6 +110,7 @@ abstract contract DiamondHarness is Test {
         roles.grantRole(GridStorage.REWARD_ADMIN_ROLE, pricingAdmin);
         roles.grantRole(GridStorage.REPORTER_ROLE, reporter);
         roles.grantRole(GridStorage.PAUSER_ROLE, pauser);
+        roles.grantRole(GridStorage.SLASHER_ROLE, slasher);
         vm.stopPrank();
     }
 
@@ -150,12 +152,20 @@ abstract contract DiamondHarness is Test {
     }
 
     function _selectorsWorkerRegistry() private pure returns (bytes4[] memory s) {
-        s = new bytes4[](5);
+        s = new bytes4[](13);
         s[0] = WorkerRegistry.registerWorker.selector;
         s[1] = WorkerRegistry.unbond.selector;
         s[2] = WorkerRegistry.getWorker.selector;
         s[3] = WorkerRegistry.isWorkerActive.selector;
         s[4] = WorkerRegistry.getTotalBonded.selector;
+        s[5] = WorkerRegistry.getMinBond.selector;
+        s[6] = WorkerRegistry.slash.selector;
+        s[7] = WorkerRegistry.withdrawBond.selector;
+        s[8] = WorkerRegistry.cancelUnbond.selector;
+        s[9] = WorkerRegistry.setUnbondingPeriod.selector;
+        s[10] = WorkerRegistry.unbondingPeriod.selector;
+        s[11] = WorkerRegistry.getUnbondInfo.selector;
+        s[12] = WorkerRegistry.setMinBond.selector;
     }
 
     function _selectorsRewardPool() private pure returns (bytes4[] memory s) {
