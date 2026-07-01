@@ -61,7 +61,7 @@ moves real money and is immutable once deployed.
 
 ## Local Contracts
 
-- **Inherit org engineering standards:** `/Users/j/fix-axios-vuln/aipg-documentation/engineering-standards/`
+- **Inherit org engineering standards:** `../aipg-documentation/engineering-standards/`
   (core + git + the matching language file). The rules below are repo specializations.
 - **Immutable-deploy discipline:** mainnet contracts cannot be patched in place. Treat every
   change as audit-then-deploy; never assume a hotfix path exists.
