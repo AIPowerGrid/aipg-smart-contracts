@@ -15,7 +15,13 @@ configuration runbook (bash, hardware-wallet signed).
     Grid in one atomic `updateModules`.
   - `configure-rewards.sh` — fund pool (`depositRewards`), set period allocation, grant
     `REPORTER_ROLE` to the settlement bot's hot wallet.
-  - `deploy-worker-bonding-facet.sh` — cut the WorkerRegistry upgrade (unbond cooldown + slash).
+  - `deploy-worker-bonding-facet.sh` — **NOT YET WRITTEN (do not deploy the WorkerRegistry
+    facet until it exists + is reviewed).** Will cut the WorkerRegistry upgrade (unbond
+    cooldown + slash — task in progress — plus the shipped dedup fix + new `getWorkerCount()`
+    view, selector `0x4d7599f1`). The diamondCut MUST **Replace** the currently-live WorkerRegistry
+    selectors (`registerWorker`,`unbond`,`getWorker`,`isWorkerActive`,`getTotalBonded`) AND **Add**
+    `getWorkerCount()` `0x4d7599f1` — a Replace-only cut would leave the new selector unrouted.
+    Verify the full selector set against the deployed facet before executing (one-way cut).
   - `deploy-denmultiplier-facet.sh`, `set-den-multipliers.sh` — ModelVault den-multiplier facet +
     its config.
   - `upgrade-modelvault-facet.js` — prints the diamondCut plan/selectors for a ModelVault upgrade.
