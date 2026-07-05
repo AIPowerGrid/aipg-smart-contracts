@@ -107,6 +107,30 @@ contract GridRewardDistributorTest is Test {
         dist.reportPeriod(1, root, 100e6, "");
     }
 
+    // Regression (P0): a second period must not re-commit funds already owed to an
+    // earlier reported-but-unpaid period. Funding for ONE period, reporting TWO,
+    // the second report must revert — otherwise both promise the same USDC.
+    function test_report_cannotOvercommitAcrossPeriods() public {
+        _setAlloc(100 * USDC);
+        _fund(100 * USDC); // exactly one period's worth
+        bytes32 root = _root2(_leaf(alice, 60e6), _leaf(bob, 40e6));
+        _report(1, root, 100e6); // commits all 100 USDC
+        // Period 2 has no free balance behind it (committed 100, paid 0).
+        vm.prank(reporter);
+        vm.expectRevert("Distributor: pool underfunded");
+        dist.reportPeriod(2, root, 100e6, "");
+    }
+
+    // Positive: funding for TWO periods lets both report (and stay fully covered).
+    function test_report_twoPeriodsWhenFullyFunded() public {
+        _setAlloc(100 * USDC);
+        _fund(200 * USDC);
+        bytes32 root = _root2(_leaf(alice, 60e6), _leaf(bob, 40e6));
+        _report(1, root, 100e6);
+        _report(2, root, 100e6); // 200 balance covers 100 committed + 100 new
+        assertEq(dist.totalCommitted(), 200 * USDC);
+    }
+
     function test_report_revertsZeroAllocation() public {
         _fund(100 * USDC);
         bytes32 root = _root2(_leaf(alice, 60e6), _leaf(bob, 40e6));

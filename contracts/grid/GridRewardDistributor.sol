@@ -165,7 +165,14 @@ contract GridRewardDistributor is AccessControl, Pausable, ReentrancyGuard {
 
         uint256 alloc = periodAllocation;
         require(alloc > 0, "Distributor: zero allocation");
-        require(poolBalance() >= alloc, "Distributor: pool underfunded");
+        // The pool must cover THIS allocation ON TOP OF everything already
+        // committed-but-unpaid, or two reported periods could both promise the
+        // same tokens and the later claimers would find the pool drained. Mirror
+        // the withdraw() guard: free balance = poolBalance - (committed - paid).
+        require(
+            poolBalance() >= (totalCommitted - totalPaidOut) + alloc,
+            "Distributor: pool underfunded"
+        );
 
         report.denRoot = denRoot;
         report.totalDen = totalDen;
