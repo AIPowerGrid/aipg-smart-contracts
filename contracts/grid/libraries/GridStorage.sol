@@ -155,6 +155,12 @@ library GridStorage {
         // derives a multiplier from the model name. 0 = unset (grid applies its
         // conservative DEFAULT_MULTIPLIER). Appended per the rule above.
         mapping(uint256 => uint256) denMultiplierE3;
+
+        // === PER-PERIOD PAYOUT CAP (added 2026-07) ===
+        // Cumulative amount already paid out for each period. A period can never
+        // pay more than its snapshotted poolAllocation, bounding a bad report's
+        // blast radius to that one period's budget. Appended per the rule above.
+        mapping(uint256 => uint256) paidPerPeriod;
     }
 
     // ============ STORAGE ACCESS ============

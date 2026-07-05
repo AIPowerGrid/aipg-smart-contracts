@@ -71,6 +71,21 @@ contract PaymentRouterTest is DiamondHarness {
         reporterFacet.reportPeriod(periodId, root, TOTAL_DEN, "");
     }
 
+    // Regression (P2): a period can never pay more than its snapshotted
+    // allocation. A wrong (too-low) totalDen inflates each amount — the
+    // per-period cap must revert an over-allocation claim.
+    function test_claim_perPeriodCap_revertsOverAllocation() public {
+        // New period, SAME root but reported with a totalDen far too low, so a
+        // single worker's amount (den*alloc/totalDen) blows past the pool alloc.
+        uint256 badPeriod = periodId + 5;
+        vm.warp((badPeriod + 1) * 86400 + 1);
+        vm.prank(reporter);
+        reporterFacet.reportPeriod(badPeriod, root, 1_000, ""); // real den ~6000
+        // worker2 has den 2000 → 2000 * 4080 / 1000 = 8160 ether > POOL (4080).
+        vm.expectRevert("PaymentRouter: period overpay");
+        payments.claim(worker2, badPeriod, 2_000, proof2);
+    }
+
     function test_claim_paysWorkerProportionalShare() public {
         // worker1 has 1000 of 6000 den → 1000 * 4080 / 6000 = 680 ether
         payments.claim(worker1, periodId, 1_000, proof1);

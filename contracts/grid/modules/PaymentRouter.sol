@@ -110,8 +110,14 @@ contract PaymentRouter {
         uint256 amount = (workerDen * report.poolAllocation) / report.totalDen;
         require(amount > 0, "PaymentRouter: zero payout");
 
+        // Hard per-period cap: a period can never pay more than its snapshotted
+        // allocation, even if the reported root/totalDen is wrong.
+        uint256 newPaid = s.paidPerPeriod[periodId] + amount;
+        require(newPaid <= report.poolAllocation, "PaymentRouter: period overpay");
+
         // CEI: mark claimed before transferring.
         s.periodClaimed[periodId][worker] = true;
+        s.paidPerPeriod[periodId] = newPaid;
         s.totalPaidOut += amount;
 
         GridStorage.Worker storage w = s.workers[worker];
@@ -149,7 +155,17 @@ contract PaymentRouter {
         uint256 amount = (workerDen * report.poolAllocation) / report.totalDen;
         if (amount == 0) return;
 
+        // Per-period cap: skip a claim that would exceed the period's allocation
+        // (bounds a bad report's blast radius), same as the single-claim path.
+        uint256 newPaid = s.paidPerPeriod[periodId] + amount;
+        if (newPaid > report.poolAllocation) return;
+
+        // CEI: mark claimed/paid before transferring. A FAILED transfer reverts
+        // the batch (rolling this row back) instead of leaving the worker marked
+        // paid-but-unpaid — a transfer failure is systemic (misfunded pool), not
+        // a per-row skip like a bad proof / already-claimed (handled above).
         s.periodClaimed[periodId][worker] = true;
+        s.paidPerPeriod[periodId] = newPaid;
         s.totalPaidOut += amount;
 
         GridStorage.Worker storage w = s.workers[worker];
@@ -157,7 +173,10 @@ contract PaymentRouter {
             w.totalRewardsEarned += amount;
         }
 
-        if (!IERC20Transfer(s.aipgToken).transfer(worker, amount)) return;
+        require(
+            IERC20Transfer(s.aipgToken).transfer(worker, amount),
+            "PaymentRouter: transfer failed"
+        );
 
         emit Claimed(periodId, worker, msg.sender, workerDen, amount);
     }

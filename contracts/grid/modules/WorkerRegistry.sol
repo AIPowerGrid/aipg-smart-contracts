@@ -47,12 +47,17 @@ contract WorkerRegistry {
         );
 
         GridStorage.Worker storage w = s.workers[msg.sender];
+        bool firstRegistration = w.workerAddress == address(0);
         w.workerAddress = msg.sender;
         w.bondAmount = bondAmount;
         w.registeredAt = block.timestamp;
         w.isActive = true;
 
-        s.workerList.push(msg.sender);
+        // Only enumerate once — a re-register after unbond must not push a
+        // duplicate entry into workerList.
+        if (firstRegistration) {
+            s.workerList.push(msg.sender);
+        }
         s.totalBonded += bondAmount;
 
         emit WorkerRegistered(msg.sender, bondAmount);
@@ -80,6 +85,12 @@ contract WorkerRegistry {
     function getWorker(address worker) external view returns (GridStorage.Worker memory) {
         GridStorage.AppStorage storage s = GridStorage.appStorage();
         return s.workers[worker];
+    }
+
+    /// @notice Number of distinct workers ever enumerated. A worker appears once
+    ///         even across unbond/re-register (no duplicate list entries).
+    function getWorkerCount() external view returns (uint256) {
+        return GridStorage.appStorage().workerList.length;
     }
 
     function isWorkerActive(address worker) external view returns (bool) {

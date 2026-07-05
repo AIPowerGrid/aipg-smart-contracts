@@ -150,12 +150,13 @@ abstract contract DiamondHarness is Test {
     }
 
     function _selectorsWorkerRegistry() private pure returns (bytes4[] memory s) {
-        s = new bytes4[](5);
+        s = new bytes4[](6);
         s[0] = WorkerRegistry.registerWorker.selector;
         s[1] = WorkerRegistry.unbond.selector;
         s[2] = WorkerRegistry.getWorker.selector;
         s[3] = WorkerRegistry.isWorkerActive.selector;
         s[4] = WorkerRegistry.getTotalBonded.selector;
+        s[5] = WorkerRegistry.getWorkerCount.selector;
     }
 
     function _selectorsRewardPool() private pure returns (bytes4[] memory s) {
