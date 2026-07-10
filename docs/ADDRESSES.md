@@ -1,7 +1,7 @@
 # Deployed Contract Addresses
 
 **Network:** Base Mainnet (Chain ID **8453**) · RPC `https://mainnet.base.org` · Explorer https://basescan.org
-**Last verified on-chain:** 2026-06-15
+**Last verified on-chain:** 2026-07-09
 
 > Verified by polling the live contracts directly (`cast`), not from memory. The
 > Grid is an EIP-2535 modular diamond — its module set is read from the proxy via
@@ -17,7 +17,7 @@
 | Contract | Address | Notes |
 |----------|---------|-------|
 | **AIPGTokenV2** | `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608` | ERC-20. 150,000,000 max supply, minting permanently disabled. |
-| **StakingVault** | `0x3ED14A6D5A48614D77f313389611410d38fd8277` | Staking rewards. Deployed 2025-11-01. |
+| **StakingVault** | `0x3ED14A6D5A48614D77f313389611410d38fd8277` | Deployed 2025-11-01. Passive-rewards program ended; retained for existing-position withdrawals. |
 | **Grid (Diamond proxy)** | `0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609` | Modular EIP-2535 proxy. All calls below route through this address. |
 
 ### Grid modules (facets behind the proxy)
@@ -55,14 +55,17 @@ The proxy currently exposes **12 module implementations**:
 
 ---
 
-## Reward / settlement layer (live as of 2026-06-15)
+## Reward / settlement contracts (deployed; claim rail not operational)
 
-The on-chain reward layer (RewardPool, DenReporter, PaymentRouter) is now cut
-into the diamond (see the module table above). Flow: the grid meters work-credit
-("den") off-chain, the settlement bot commits a per-period **Merkle root** of
-`[worker, den]` via `DenReporter.reportPeriod`, and workers (or a gas-only
-settlement bot) claim their pro-rata AIPG from `RewardPool` via
-`PaymentRouter.claim`/`claimBatch` with a Merkle proof.
+RewardPool, DenReporter, and PaymentRouter are cut into the diamond (verified
+through `moduleAddresses()` on 2026-07-09). Their intended flow is: meter den
+off-chain, report a period Merkle root, then claim pro-rata AIPG with proofs.
+
+That intended claim rail is **not the current operational worker payout path**.
+Grid core still pays the live bootstrap rail through its custodial hourly AIPG
+sender; the Merkle publisher in core remains a scaffold without a live claim
+workflow. Treat these facets as deployed infrastructure, not proof that periods
+are currently reported or workers currently claim through PaymentRouter.
 
 > Reporting is gated by `REPORTER_ROLE`. Until validator challenges / federation
 > co-signing land, a single reporter's risk is bounded to one period's

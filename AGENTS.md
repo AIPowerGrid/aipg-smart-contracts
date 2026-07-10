@@ -96,4 +96,5 @@ moves real money and is immutable once deployed.
 - [test/AGENTS.md](test/AGENTS.md) — Foundry tests + Diamond harness.
 - [sdk/AGENTS.md](sdk/AGENTS.md) — ethers v6 client SDKs.
 - [scripts/AGENTS.md](scripts/AGENTS.md) — verification + hardware-wallet deployment scripts.
-- `docs/ADDRESSES.md` — canonical deployed addresses (not an AGENTS.md, but read it).
+- [script/AGENTS.md](script/AGENTS.md) — Foundry deployment scripts.
+- [docs/AGENTS.md](docs/AGENTS.md) — deployed addresses, economics, and operator docs.

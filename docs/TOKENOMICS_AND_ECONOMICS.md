@@ -1,5 +1,10 @@
 # AIPG Token Economics
 
+> **Current-state note:** Worker payouts are active, while the former passive
+> staking rewards program has ended. The StakingVault remains deployed for
+> existing-position withdrawals. GridNFT is testnet/reference code and is not a
+> worker registration, bonding, or payout requirement.
+
 ## Overview
 
 AIPG (AI Power Grid) powers a decentralized AI compute network where GPU workers perform compute tasks and earn AIPG tokens. The token also serves as staking collateral and a means of governance.
@@ -28,9 +33,9 @@ The core token contract:
 
 **Address**: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`
 
-### 2. StakingVault
+### 2. StakingVault (Program Ended)
 
-Synthetix-style staking mechanism for passive rewards:
+Deployed Synthetix-style vault used by the ended passive-rewards program:
 
 - Users stake AIPG to earn rewards
 - Rewards funded manually from treasury
@@ -40,7 +45,7 @@ Synthetix-style staking mechanism for passive rewards:
 
 **Address**: `0x3ED14A6D5A48614D77f313389611410d38fd8277`
 
-#### How Staking Works
+#### Historical Reward-Period Mechanics
 
 1. **Fund Vault**: Treasury sends AIPG to StakingVault
 2. **Start Period**: Admin calls `notifyRewardAmount(amount)`
@@ -74,16 +79,16 @@ Worker rewards are tracked separately from staker rewards:
 - Workers receive AIPG transfers from treasury for completed work
 - BondedWorkerRegistry tracks statistics (jobs, earnings)
 
-### 4. GridNFT
+### 4. GridNFT (Not Mainnet)
 
-AI-generated art NFTs with on-chain workflow parameters:
+Reference/testnet AI-art NFTs with on-chain workflow parameters:
 - Minting fee in AIPG
 - Deterministic reproduction from stored parameters
 - Model and recipe constraints enforced on-chain
 
 ## Reward Distribution Model
 
-### For Stakers (Passive Income)
+### For Stakers (Ended Program)
 
 | Source | Mechanism | Frequency |
 |--------|-----------|-----------|
@@ -97,10 +102,11 @@ AI-generated art NFTs with on-chain workflow parameters:
 
 ## Economic Incentives
 
-### For Stakers
-- **Earn**: Passive AIPG rewards proportional to stake
-- **Risk**: Smart contract risk, opportunity cost
-- **Benefit**: No active participation required
+### For Existing Stakers
+- **Action**: Review and withdraw any remaining position through the deployed
+  vault
+- **Status**: No current passive-reward campaign or advertised APY
+- **Risk**: Smart-contract and transaction risk remain until withdrawal
 
 ### For Workers
 - **Earn**: AIPG for completed compute jobs
@@ -140,7 +146,7 @@ AI-generated art NFTs with on-chain workflow parameters:
 | Contract | Purpose | Status |
 |----------|---------|--------|
 | AIPGTokenV2 | Core ERC20 token | ✅ Production |
-| StakingVault | Staker rewards | ✅ Production |
+| StakingVault | Existing-position withdrawal; reward program ended | Deployed / inactive program |
 | BondedWorkerRegistry | Worker tracking | Reference |
 | GridNFT | AI art NFTs | Reference |
 | ModelRegistry | Model constraints | Reference |
@@ -148,6 +154,6 @@ AI-generated art NFTs with on-chain workflow parameters:
 
 ## Links
 
-- [Stake AIPG](https://aipowergrid.io/staking)
+- [Staking status and withdrawals](https://aipowergrid.io/staking)
 - [Token Contract](https://basescan.org/address/0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608)
 - [Staking Contract](https://basescan.org/address/0x3ED14A6D5A48614D77f313389611410d38fd8277)

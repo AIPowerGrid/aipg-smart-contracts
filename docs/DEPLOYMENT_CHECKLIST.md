@@ -1,5 +1,10 @@
 # StakingVault Deployment & Operations Checklist
 
+> **Archived operations runbook:** The contracts remain deployed, but the
+> public staking rewards program has ended. Do not fund or restart a reward
+> period from this checklist. Existing-user withdrawal and emergency procedures
+> remain relevant; any restart requires a new reviewed operating plan.
+
 ## ✅ Deployed Contracts
 
 | Contract | Address | Status |
@@ -7,7 +12,7 @@
 | AIPGTokenV2 | `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608` | ✅ Live |
 | StakingVault | `0x3ED14A6D5A48614D77f313389611410d38fd8277` | ✅ Live |
 
-## 🔧 Operations
+## Historical Reward Operations (Do Not Run)
 
 ### Funding Rewards
 

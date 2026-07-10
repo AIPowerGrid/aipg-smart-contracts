@@ -1,8 +1,16 @@
 # AIPG Staking System
 
+> **Current product status:** The passive staking rewards program has ended.
+> The StakingVault remains deployed so existing participants can inspect and
+> withdraw positions, but operators must not start a new reward period without
+> a separately reviewed and announced governance/product decision. The
+> mechanics below document the deployed contract, not a currently offered APY.
+
 ## Overview
 
-The AIPG staking system allows token holders to stake their AIPG and earn rewards. It uses a Synthetix-style reward distribution mechanism with manual funding.
+The deployed AIPG StakingVault implements a Synthetix-style reward distribution
+mechanism with manual funding. This document is retained for contract behavior,
+withdrawal support, and audit history.
 
 ---
 
@@ -56,7 +64,10 @@ The AIPG staking system allows token holders to stake their AIPG and earn reward
 
 ---
 
-## Economics
+## Historical Economics
+
+The budget and APY examples in this section describe the ended program and are
+not current offers, forecasts, or operator instructions.
 
 ### Budget Allocation
 
@@ -304,5 +315,4 @@ See `audit-package/scripts/test-staking-vault.js` for integration tests.
 - **Documentation**: https://docs.aipowergrid.io/staking
 - **Discord**: https://discord.gg/aipowergrid
 - **Twitter**: https://twitter.com/aipowergrid
-
 

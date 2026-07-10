@@ -1,4 +1,4 @@
-// Active Contract (Base Mainnet): see docs/ADDRESSES.md
+// Testnet/reference contract only; no Base mainnet deployment is listed in docs/ADDRESSES.md.
 // SPDX-License-Identifier: MIT
 // Deployed at: 0xa87Eb64534086e914A4437ac75a1b554A10C9934 (Base Sepolia)
 pragma solidity ^0.8.24;
