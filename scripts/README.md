@@ -1,6 +1,6 @@
 # Scripts
 
-Verification scripts for deployed contracts on Base Mainnet.
+Verification and hardware-wallet deployment scripts for contracts on Base Mainnet.
 
 ## Setup
 
@@ -69,6 +69,28 @@ Contract: 0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608
 - No gas fees
 - Safe for mainnet
 
+## ACE-Step Recipe Registration
+
+`deployment/register-ace-step-recipe.sh` canonicalizes the governed ACE-Step
+recipe embedded in Worker Profile V1 and verifies its SHA-256 commitment. Its
+default mode is offline and does not contact a wallet:
+
+```bash
+scripts/deployment/register-ace-step-recipe.sh --prepare
+```
+
+After reviewing the printed root, register it through the live Grid Diamond
+with a hardware wallet:
+
+```bash
+scripts/deployment/register-ace-step-recipe.sh --send
+```
+
+The send path requires Base Mainnet, checks the live workflow-size cap, and is
+idempotent only when the existing recipe bytes, root, metadata, and permissions
+match exactly. Set `HWFLAG=--trezor` to use a Trezor instead of the default
+Ledger. Raw private keys are intentionally unsupported.
+
 ## Networks
 
 ### Base Mainnet
@@ -83,10 +105,13 @@ Contract: 0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608
 
 ## Security
 
-- Read-only operations only
-- No private keys required
-- Public RPC endpoints
-- No sensitive data logged
+- Verification scripts are read-only and require no private keys.
+- Deployment scripts default to prepare/dry-run modes and use hardware wallets
+  for broadcasts.
+- Never add raw private keys to environment variables, command lines, or files.
+- Public RPC endpoints are suitable for reads; use a reviewed provider for
+  reliable mainnet writes.
+- No sensitive data is intentionally logged.
 
 ## Troubleshooting
 

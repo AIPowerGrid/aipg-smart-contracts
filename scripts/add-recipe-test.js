@@ -2,12 +2,9 @@
 /**
  * Add Recipe to RecipeVault via Grid Diamond
  * 
- * IMPORTANT: storeRecipe() requires RECIPE_CREATOR_ROLE
- * Contact admin to get the role granted to your wallet.
- * 
- * Usage:
- *   node scripts/add-recipe-test.js --dry-run              # Test without tx
- *   PRIVATE_KEY=0x... node scripts/add-recipe-test.js      # Submit tx
+ * Legacy read-only smoke tool for the FLUX example. It never broadcasts.
+ * Production recipe writes use deployment/register-ace-step-recipe.sh (or a
+ * reviewed equivalent) with a hardware wallet.
  */
 
 require('dotenv').config();
@@ -30,11 +27,6 @@ const CONFIG = {
 };
 
 // Role required to add recipes
-const RECIPE_CREATOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes('RECIPE_CREATOR_ROLE'));
-const ADMIN_ROLE = ethers.keccak256(ethers.toUtf8Bytes('ADMIN_ROLE'));
-
-const Compression = { None: 0, Gzip: 1, Brotli: 2 };
-
 const RECIPE_VAULT_ABI = [
   // Write
   "function storeRecipe(bytes32 recipeRoot, bytes calldata workflowData, bool canCreateNFTs, bool isPublic, uint8 compression, string calldata name, string calldata description) external returns (uint256 recipeId)",
@@ -94,21 +86,10 @@ function formatBytes(bytes) {
 // ============ MAIN ============
 
 async function main() {
-  const DRY_RUN = process.argv.includes('--dry-run');
-  
   console.log('\n╔════════════════════════════════════════════════════════════╗');
   console.log('║       AIPG RecipeVault - Add Recipe                        ║');
-  if (DRY_RUN) console.log('║                    🧪 DRY RUN MODE                          ║');
+  console.log('║                    🧪 READ-ONLY MODE                        ║');
   console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-  const privateKey = process.env.PRIVATE_KEY;
-  if (!privateKey && !DRY_RUN) {
-    console.error('❌ PRIVATE_KEY required');
-    console.log('\nUsage:');
-    console.log('  node scripts/add-recipe-test.js --dry-run');
-    console.log('  PRIVATE_KEY=0x... node scripts/add-recipe-test.js');
-    process.exit(1);
-  }
 
   // Connect
   console.log('📡 Connecting to Base Mainnet...');
@@ -116,46 +97,7 @@ async function main() {
   const network = await provider.getNetwork();
   console.log(`   Chain ID: ${network.chainId}`);
   
-  let signer = null;
-  let signerAddress = null;
-  
-  if (!DRY_RUN && privateKey) {
-    signer = new ethers.Wallet(privateKey, provider);
-    signerAddress = signer.address;
-    console.log(`   Signer: ${signerAddress}`);
-    
-    const balance = await provider.getBalance(signerAddress);
-    console.log(`   Balance: ${ethers.formatEther(balance)} ETH`);
-    
-    if (balance === 0n) {
-      console.error('❌ Wallet has no ETH for gas');
-      process.exit(1);
-    }
-  }
-
-  const contract = new ethers.Contract(CONFIG.GRID_DIAMOND, RECIPE_VAULT_ABI, signer || provider);
-
-  // Check role (if not dry run)
-  if (!DRY_RUN && signerAddress) {
-    console.log('\n🔐 Checking permissions...');
-    const hasCreatorRole = await contract.hasRole(RECIPE_CREATOR_ROLE, signerAddress);
-    const hasAdminRole = await contract.hasRole(ADMIN_ROLE, signerAddress);
-    
-    if (hasCreatorRole) {
-      console.log('   ✅ Has RECIPE_CREATOR_ROLE');
-    } else if (hasAdminRole) {
-      console.log('   ✅ Has ADMIN_ROLE (can create recipes)');
-    } else {
-      console.error('   ❌ Missing RECIPE_CREATOR_ROLE');
-      console.log('\n   Your wallet does not have permission to add recipes.');
-      console.log('   Contact the admin to grant RECIPE_CREATOR_ROLE to:');
-      console.log(`   ${signerAddress}`);
-      console.log('\n   Authorized wallets:');
-      console.log('   - 0xA218db26ed545f3476e6c3E827b595cf2E182533 (admin)');
-      console.log('   - 0xe2dddddf4dd22e98265bbf0e6bdc1cb3a4bb26a8');
-      process.exit(1);
-    }
-  }
+  const contract = new ethers.Contract(CONFIG.GRID_DIAMOND, RECIPE_VAULT_ABI, provider);
 
   // Check state
   console.log('\n📊 RecipeVault State:');
@@ -217,57 +159,10 @@ async function main() {
   console.log(`   Can Create NFTs: true`);
   console.log(`   Is Public: true`);
 
-  if (DRY_RUN) {
-    console.log('\n════════════════════════════════════════════════════════════════');
-    console.log('   🧪 DRY RUN COMPLETE');
-    console.log('');
-    console.log('   To submit, run with PRIVATE_KEY:');
-    console.log('   PRIVATE_KEY=0x... node scripts/add-recipe-test.js');
-    console.log('');
-    console.log('   NOTE: Your wallet needs RECIPE_CREATOR_ROLE');
-    console.log('════════════════════════════════════════════════════════════════\n');
-    return;
-  }
-
-  // Submit
-  console.log('\n📤 Submitting...');
-  try {
-    const tx = await contract.storeRecipe(
-      recipeRoot, compressed.bytes, true, true,
-      Compression.Gzip, recipeName, recipeDescription
-    );
-    
-    console.log(`   Tx: ${tx.hash}`);
-    console.log('   ⏳ Confirming...');
-    
-    const receipt = await tx.wait();
-    console.log(`   ✅ Block ${receipt.blockNumber} | Gas: ${receipt.gasUsed}`);
-
-    const event = receipt.logs.find(log => {
-      try { return contract.interface.parseLog(log)?.name === 'RecipeStored'; }
-      catch { return false; }
-    });
-
-    if (event) {
-      const parsed = contract.interface.parseLog(event);
-      console.log(`\n🎉 Recipe Stored!`);
-      console.log(`   ID: ${parsed.args[0]}`);
-      console.log(`   Creator: ${parsed.args[2]}`);
-    }
-    
-  } catch (error) {
-    console.error('\n❌ Failed:', error.message);
-    
-    if (error.message.includes('not recipe creator')) {
-      console.log('\n   Your wallet lacks RECIPE_CREATOR_ROLE.');
-      console.log('   Contact admin to get access.');
-    }
-    process.exit(1);
-  }
-
   console.log('\n════════════════════════════════════════════════════════════════');
-  console.log('   Recipe added! Retrieve it with:');
-  console.log('   await sdk.getRecipe(recipeId)');
+  console.log('   READ-ONLY CHECK COMPLETE');
+  console.log('   Use scripts/deployment/register-ace-step-recipe.sh for reviewed');
+  console.log('   hardware-wallet registration of the governed ACE-Step recipe.');
   console.log('════════════════════════════════════════════════════════════════\n');
 }
 
