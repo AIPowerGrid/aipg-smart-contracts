@@ -27,13 +27,14 @@ do not describe the deployed contract as an active rewards campaign.
 ├── contracts/
 │   ├── AIPGTokenV2.sol          ← ERC20 token (PRODUCTION)
 │   ├── StakingVault.sol         ← Deployed vault; rewards program ended
+│   ├── GridCatalogV2.sol        ← Current catalog design (NOT DEPLOYED)
 │   │
 │   └── grid/                    ← Modular Grid Architecture (PRODUCTION)
 │       ├── Grid.sol             ← Main proxy contract
 │       ├── GridInit.sol         ← Initialization
 │       ├── modules/
-│       │   ├── ModelVault.sol   ← AI model registry
-│       │   ├── RecipeVault.sol  ← Workflow storage
+│       │   ├── ModelVault.sol   ← Legacy model records (readable)
+│       │   ├── RecipeVault.sol  ← Legacy workflow records (readable)
 │       │   ├── JobAnchor.sol    ← Job tracking
 │       │   ├── WorkerRegistry.sol
 │       │   ├── RoleManager.sol
@@ -44,6 +45,7 @@ do not describe the deployed contract as an active rewards campaign.
 │       └── interfaces/
 │
 ├── docs/                        ← Documentation
+├── catalog/                     ← V2 schemas, examples, and registration sources
 ├── security-analysis/           ← Flattened contracts + findings
 ├── scripts/                     ← Verification scripts
 ├── sdk/                         ← JavaScript SDKs
@@ -76,6 +78,11 @@ ModelVault extension and the RewardPool, DenReporter, and PaymentRouter reward
 facets. The canonical, on-chain-verified inventory is
 [docs/ADDRESSES.md](docs/ADDRESSES.md); do not maintain a second address table
 here.
+
+The ModelVault and RecipeVault facets contain historical Grid data and remain
+readable. New catalog records are intended for the standalone,
+content-addressed `GridCatalogV2`, which is implemented but **not deployed**.
+See [docs/GRID_CATALOG_V2.md](docs/GRID_CATALOG_V2.md).
 
 **Benefits:**
 - Single address for all compute infrastructure
@@ -111,10 +118,11 @@ node scripts/interact-aipg-token.js
 | AIPGTokenV2 | ✅ Live | 150M supply, **minting renounced** |
 | StakingVault | ✅ Live | Synthetix-style, no lock period |
 | Grid | ✅ Live | Modular proxy (EIP-2535) |
-| GridNFT | 📋 Ready | AI-generated art NFTs |
+| GridCatalogV2 | 🧪 Pre-deploy | Implemented and tested; audit required |
+| GridNFT | 🗄️ Reference | Sepolia/reference only; not Base mainnet production |
 
 ---
 
 **Network:** Base Mainnet (Chain ID: 8453)  
 **License:** MIT  
-**Last Updated:** 2025-01-05
+**Last Updated:** 2026-07-22

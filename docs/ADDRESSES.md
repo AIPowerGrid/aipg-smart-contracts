@@ -71,6 +71,14 @@ are currently reported or workers currently claim through PaymentRouter.
 > co-signing land, a single reporter's risk is bounded to one period's
 > allocation. Unaudited — proceed accordingly.
 
+## Planned replacement catalog (not deployed)
+
+`GridCatalogV2` is the reviewed replacement path for current model manifests
+and recipes. It is a standalone contract and has **no Base mainnet address**.
+The Diamond ModelVault and RecipeVault remain legacy, readable modules; their
+historical records must not be presented as the current Grid catalog. See
+[`GRID_CATALOG_V2.md`](GRID_CATALOG_V2.md).
+
 ---
 
 ## 🗄️ Deprecated / superseded

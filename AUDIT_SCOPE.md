@@ -1,5 +1,27 @@
 # Audit Scope
 
+## Pre-deployment candidate
+
+### GridCatalogV2 - NOT DEPLOYED
+
+**Status:** implemented on a review branch; no Base address
+**Priority:** CRITICAL before deployment
+
+Standalone content-addressed registry intended to supersede the legacy Diamond
+ModelVault and RecipeVault data. Audit at minimum:
+
+1. Role administration and least-privilege separation.
+2. Immutable model/recipe identity and release-key uniqueness.
+3. Recipe-to-model dependency integrity and deactivation behavior.
+4. Pause semantics, especially emergency deactivation and NFT revocation.
+5. Pagination bounds, storage growth, gas, and event/indexer correctness.
+6. Canonical JSON/hash tooling and decoded registration calldata.
+7. Safe/Ledger deployment controls and post-deploy role verification.
+8. Core's eventual URI-fetch, hash-verification, and last-known-good cache path.
+
+See `docs/GRID_CATALOG_V2.md`. A passing legacy audit does not approve this
+contract or authorize deployment.
+
 ## Focus Contracts (Production)
 
 ### 1. AIPGTokenV2 ✅ DEPLOYED
@@ -128,10 +150,10 @@ Grid.sol (Proxy) - 0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609
 
 ## Testing & Verification
 
-All contracts compiled with:
+Contracts compile with:
 - Solidity `0.8.24`
 - OpenZeppelin contracts
-- Hardhat environment
+- Foundry (`via_ir`, optimizer enabled)
 
 **Mainnet Verification:**
 - AIPGTokenV2: [BaseScan](https://basescan.org/address/0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608)
@@ -142,4 +164,4 @@ All contracts compiled with:
 
 ---
 
-**Last Updated**: December 2025
+**Last Updated**: July 2026

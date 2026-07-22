@@ -4,14 +4,18 @@ Helper SDKs for interacting with AI Power Grid contracts.
 
 ## Available SDKs
 
+### grid-catalog-v2.js
+Read-only access to the planned content-addressed V2 model and recipe catalog.
+The contract is not deployed; see `GRID_CATALOG_V2.md`.
+
 ### aipg-nft-sdk.js
 GridNFT contract interactions for reading and creating AI-generated NFTs.
 
 ### modelregistry-sdk.js
-Model registry interactions for querying AI models and constraints.
+Legacy/reference model registry interactions.
 
 ### recipevault-sdk.js
-Recipe vault interactions for storing and retrieving ComfyUI workflows via the Grid Diamond.
+Legacy RecipeVault interactions via the Grid Diamond. Do not use it for V2.
 
 See `RECIPEVAULT_README.md` for full documentation and examples.
 
@@ -72,5 +76,5 @@ See `sdk-example.js` for complete examples and patterns.
 
 - All SDKs use ethers v6
 - Read-only by default
-- Add private key for signing transactions
+- GridCatalogV2 is deliberately read-only; writes use reviewed hardware-wallet/Safe tooling
 - No secrets in repository

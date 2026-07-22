@@ -1,0 +1,24 @@
+{
+  "catalog_address": "0x1111111111111111111111111111111111111111",
+  "publisher": "0x2222222222222222222222222222222222222222",
+  "models": [
+    {
+      "manifest_path": "model-manifest.json",
+      "manifest_uri": "ipfs://example-model-manifest"
+    }
+  ],
+  "recipes": [
+    {
+      "content_path": "example-recipe.json",
+      "content_uri": "ipfs://example-recipe",
+      "slug": "example-video-recipe",
+      "version": "1.0.0",
+      "output_modalities": [
+        "video"
+      ],
+      "required_model_releases": [
+        "example-video-model@1.0.0"
+      ]
+    }
+  ]
+}

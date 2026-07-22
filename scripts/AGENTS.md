@@ -27,7 +27,15 @@ configuration runbook (bash, hardware-wallet signed).
     its config.
   - `register-ace-step-recipe.sh` — prepares canonical Worker Profile V1 recipe bytes and
     SHA-256 locally; `--send` registers them through the live Diamond with a hardware wallet.
+  - `deploy-grid-catalog-v2.sh` — prepare-by-default standalone V2 catalog deployment;
+    requires explicit role addresses, enforces chain ID, uses a hardware wallet, and verifies
+    roles plus empty initial state after broadcast. No deployment has been authorized yet.
   - `upgrade-modelvault-facet.js` — prints the diamondCut plan/selectors for a ModelVault upgrade.
+- **`catalog/build-plan.py`** — validates canonical model manifests and recipes, derives SHA-256
+  IDs / artifact roots and keccak release keys, then emits deterministic `cast` calldata plus
+  Ledger commands. It never signs or broadcasts.
+- `catalog/test_build_plan.py` covers deterministic output, duplicate-key rejection, and the
+  worker-advertised model-name dependency check.
 
 ## Local Contracts
 
