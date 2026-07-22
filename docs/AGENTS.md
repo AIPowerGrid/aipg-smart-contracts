@@ -11,6 +11,8 @@ Grid modules, reward design, worker bonding, NFT plans, and deployment gates.
 - `STAKING.md`, `DEPLOYMENT_CHECKLIST.md` - StakingVault contract operations;
   public product status may differ from contract capability.
 - `DEN_MULTIPLIER.md`, `WORKER_BONDING.md` - Grid module design/deploy runbooks.
+- `GRID_CATALOG_V2.md` - standalone content-addressed catalog design, trust boundary,
+  canonical hashing rules, Safe/Ledger deployment gates, and legacy migration.
 - `TOKENOMICS_AND_ECONOMICS.md` - protocol economics design.
 - `GRIDNFT.md`, `NFT_SYSTEM_EXPLAINED.md` - NFT design; not mainnet production
   unless `ADDRESSES.md` says otherwise.

@@ -9,15 +9,18 @@ Diamond so they exercise the production delegatecall + selector-routing + AppSto
 
 - `RewardPool.t.sol`, `DenReporter.t.sol`, `PaymentRouter.t.sol`, `WorkerRegistryBonding.t.sol`,
   `ModelVaultDenMultiplier.t.sol` — facet-level tests for the value/settlement paths.
+- `GridCatalogV2.t.sol` — standalone catalog role, immutable-record, dependency,
+  deactivation, NFT-approval, pause, and pagination invariants.
 - `utils/DiamondHarness.sol` — base test fixture: deploys a fresh `Grid`, cuts in the facets,
   wires roles, exposes the proxy address typed as each facet interface. Most tests inherit this.
 - `utils/MockAIPG.sol` — mock ERC20 stand-in for the AIPG token in bond/reward flows.
 
 ## Local Contracts
 
-- Test **through the Diamond** (cast the proxy address to a facet interface), never a facet in
+- Test Diamond facets **through the Diamond** (cast the proxy address to a facet interface), never a facet in
   isolation — facets assume they are delegatecalled with the Diamond's storage slot. Isolated
-  unit tests give false confidence and miss selector/storage/role bugs.
+  unit tests give false confidence and miss selector/storage/role bugs. Standalone contracts such
+  as `GridCatalogV2` are tested directly.
 - The harness is the canonical setup; new facet tests extend `DiamondHarness` rather than
   re-deploying ad hoc.
 

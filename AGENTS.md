@@ -52,6 +52,7 @@ moves real money and is immutable once deployed.
   Owned in its own AGENTS.md.
 - **`docs/`** — `ADDRESSES.md` (source of truth for deployed addresses), tokenomics, staking,
   den-multiplier, worker-bonding, deployment checklist. Read before any deploy.
+- **`catalog/`** — GridCatalogV2 schemas, examples, and reviewed registration sources.
 - **`deployments/base-mainnet.json`** — machine-readable deployed address manifest.
 - **`AUDIT_SCOPE.md` / `SECURITY_AUDIT_REPORT.md` / `security-analysis/`** — audit surface,
   findings, and flattened contracts. Read `AUDIT_SCOPE.md` before touching production contracts.
@@ -93,6 +94,7 @@ moves real money and is immutable once deployed.
 ## Child DOX Index
 
 - [contracts/AGENTS.md](contracts/AGENTS.md) — all Solidity: standalone contracts + the Grid Diamond.
+- [catalog/AGENTS.md](catalog/AGENTS.md) — V2 catalog manifests and registration-plan inputs.
 - [test/AGENTS.md](test/AGENTS.md) — Foundry tests + Diamond harness.
 - [sdk/AGENTS.md](sdk/AGENTS.md) — ethers v6 client SDKs.
 - [scripts/AGENTS.md](scripts/AGENTS.md) — verification + hardware-wallet deployment scripts.

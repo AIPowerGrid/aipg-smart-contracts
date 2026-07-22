@@ -1,0 +1,23 @@
+{
+  "_grid": {
+    "name": "Example Video Recipe",
+    "modelName": "Example Video Recipe",
+    "engine": "comfyui",
+    "jobType": "video",
+    "deterministic": false,
+    "requiredModels": [
+      "example-video-model"
+    ],
+    "vars": {
+      "prompt": "1.inputs.text"
+    },
+    "clamps": {},
+    "enums": {}
+  },
+  "1": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "example"
+    }
+  }
+}

@@ -1,5 +1,11 @@
 # AI Power Grid - Security Audit Report
 
+> **Historical report, not a blanket current approval.** This November 2025
+> analysis predates the deployed Grid reward facets and does not cover
+> `GridCatalogV2`, current worker bonding changes, deployment scripts, or later
+> Core integrations. Consult `AUDIT_SCOPE.md` and perform a fresh audit before
+> any new deployment or Diamond cut.
+
 **Date:** November 26, 2025  
 **Auditor:** Internal Security Analysis  
 **Tools:** Slither v0.10.x, Solidity Compiler 0.8.24
@@ -182,4 +188,3 @@ The AI Power Grid smart contracts have been analyzed and found to be secure for 
 
 **Report Generated:** November 26, 2025  
 **Package Version:** audit-package v2.0
-

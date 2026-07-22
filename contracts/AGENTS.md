@@ -11,6 +11,8 @@ EIP-2535 Diamond under `grid/`.
   150M fixed cap, **minting renounced**. Live: `0xa1c0deCaFE3E9Bf06A5F29B7015CD373a9854608`.
 - **`StakingVault.sol`** — production Synthetix-style staking (per-second accrual, manual
   `notifyRewardAmount`, no lock). Live: `0x3ED14A6D5A48614D77f313389611410d38fd8277`.
+- **`GridCatalogV2.sol`** — standalone, content-addressed model-manifest and recipe registry.
+  It supersedes the legacy Diamond vault data once deployed; no mainnet address exists yet.
 - **`grid/`** — the live Grid Diamond (proxy + facets + storage). Owned in its own AGENTS.md.
 - **`interfaces/`** — `IAIPGToken`, `IStakingVault`, `ISynthetix`. Shared ABIs for the standalone
   contracts. Trivial; no DOX child.

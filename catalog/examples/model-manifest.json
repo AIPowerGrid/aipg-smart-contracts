@@ -1,0 +1,30 @@
+{
+  "schema": "aipg.model-manifest.v1",
+  "slug": "example-video-model",
+  "version": "1.0.0",
+  "display_name": "Example Video Model",
+  "modalities": [
+    "video"
+  ],
+  "worker_model_names": [
+    "example-video-model"
+  ],
+  "min_vram_mib": 24576,
+  "artifacts": [
+    {
+      "role": "checkpoint",
+      "filename": "example-video-model.safetensors",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "size_bytes": 123456789,
+      "source_uri": "ipfs://example-model-artifact"
+    }
+  ],
+  "runtime": {
+    "engine": "comfyui",
+    "minimum_version": "0.3.0"
+  },
+  "license": {
+    "identifier": "EXAMPLE-ONLY",
+    "source_uri": "https://example.invalid/license"
+  }
+}

@@ -91,6 +91,34 @@ idempotent only when the existing recipe bytes, root, metadata, and permissions
 match exactly. Set `HWFLAG=--trezor` to use a Trezor instead of the default
 Ledger. Raw private keys are intentionally unsupported.
 
+## GridCatalogV2
+
+The V2 catalog is not deployed. Prepare a deterministic deployment plan with
+explicit role addresses:
+
+```bash
+export CATALOG_ADMIN=0xYourBaseSafe
+export CATALOG_REGISTRAR=0xRegistrar
+export CATALOG_PAUSER=0xPauser
+export CATALOG_NFT_APPROVER=0xNftApprover
+scripts/deployment/deploy-grid-catalog-v2.sh --prepare
+```
+
+The `--send` path additionally requires `BASE_RPC_URL`, verifies the chain ID,
+requires four distinct role addresses, requires the Base mainnet admin to be a
+deployed contract, accepts only Ledger or Trezor signing, and verifies roles
+plus empty state after deployment.
+Do not invoke it until the contract audit and Safe plan are approved.
+
+Registration calldata is derived from reviewed files rather than hand-entered:
+
+```bash
+python3 scripts/catalog/build-plan.py catalog/examples/registration-plan.json
+```
+
+The example output is never a production registration plan. Production files
+must carry independently verified artifact hashes and immutable content URIs.
+
 ## Networks
 
 ### Base Mainnet
@@ -129,5 +157,6 @@ node scripts/interact-aipg-token.js
 ## Related Docs
 
 - `docs/ADDRESSES.md` - All deployed addresses
+- `docs/GRID_CATALOG_V2.md` - V2 catalog trust boundary and deployment gates
 - `AUDIT_SCOPE.md` - Audit priorities
 - `docs/STAKING.md` - Staking documentation
