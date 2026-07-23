@@ -32,16 +32,18 @@ a listed model.
 
 ## Model identity
 
-A model ID is the SHA-256 digest of its canonical model manifest. The manifest
-describes the complete runnable release, including component artifact hashes,
-quantization, runtime, source, license, minimum VRAM, modalities, and the exact
-model names workers advertise. Registration tooling requires recipe
-`_grid.requiredModels` to match those advertised names.
+A model ID is the SHA-256 digest of its RFC 8785 JSON Canonicalization Scheme
+(JCS) model manifest. The manifest describes the complete runnable release,
+including component artifact hashes, quantization, runtime, source, license,
+minimum VRAM, modalities, and the exact model names workers advertise.
+Registration tooling requires recipe `_grid.requiredModels` to match those
+advertised names.
 
 The contract stores:
 
 - `manifestHash` / model ID;
-- `artifactRoot`, the SHA-256 commitment to the sorted artifact array;
+- `artifactRoot`, a domain-separated SHA-256 commitment to the sorted artifact
+  binary digests;
 - hashed canonical slug and version;
 - a modality bitmask containing only the defined text, image, video, audio, and
   3D bits;
@@ -52,11 +54,13 @@ version and manifest; historical content is never rewritten.
 
 ## Recipe identity
 
-A recipe ID is the SHA-256 digest of canonical recipe JSON, including its
-`_grid` policy metadata. The contract stores the content URI, output modalities,
-publisher, and 1-8 required V2 model IDs. Required model IDs must be strictly
-ascending. This makes the dependency commitment canonical, rejects duplicates,
-and keeps on-chain validation linear in the number of dependencies.
+A recipe ID is the SHA-256 digest of RFC 8785 JCS recipe JSON, including its
+`_grid` policy metadata. `_grid.catalog` binds the catalog schema, slug, version,
+output modalities, and required model releases into those hashed bytes. The
+contract stores the content URI, output modalities, publisher, and 1-8 required
+V2 model IDs. Required model IDs must be strictly ascending. This makes the
+dependency commitment canonical, rejects duplicates, and keeps on-chain
+validation linear in the number of dependencies.
 
 A recipe is executable only while it and all required models are active. This
 view is a catalog invariant, not proof of current worker capacity.
@@ -68,18 +72,25 @@ bind to the exact V2 recipe ID and require `isRecipeNftEligible(recipeId)`. That
 view combines the explicit approval with the current active state of the recipe
 and every required model.
 
-## Canonical JSON v1
+## Canonical JSON
 
-`scripts/catalog/build-plan.py` is the reference implementation:
+Model manifests and recipe content use RFC 8785 JCS. The repository's
+`scripts/catalog/canonicalize.mjs` is the executable reference implementation,
+and `scripts/catalog/build-plan.py` invokes it directly:
 
-1. Parse UTF-8 JSON and reject duplicate object keys.
-2. Reject NaN and infinities; manifest numeric fields are integers.
-3. Sort object keys recursively.
-4. Preserve array order. Model artifact arrays must already be sorted by
-   `(role, filename, sha256)`.
-   Recipe model IDs are derived by the tool and sorted in ascending byte order.
-5. Serialize with UTF-8, no insignificant whitespace, and separators `,` / `:`.
-6. Compute SHA-256 over those exact canonical bytes.
+1. Parse UTF-8 JSON; the plan builder rejects duplicate object keys before
+   invoking the canonicalizer.
+2. Reject NaN, infinities, and invalid Unicode. Values
+   requiring integer precision beyond IEEE-754 must be encoded as strings.
+3. Sort object keys by UTF-16 code units and preserve array order.
+4. Serialize numbers using ECMAScript/JSON rules, including `-0` as `0`.
+5. Compute SHA-256 over those exact JCS bytes.
+
+Model artifact arrays must already be sorted by `(role, filename, sha256)`.
+`artifactRoot` is SHA-256 over the ASCII domain
+`AIPG_ARTIFACT_ROOT_V1\0`, a four-byte big-endian artifact count, and the
+ordered raw 32-byte artifact SHA-256 digests. Recipe model IDs are derived by
+the tool and sorted in ascending byte order.
 
 Registration plans require `ipfs://` or `ar://` URIs for manifests and recipe
 content. Artifact source locations may use HTTPS because the manifest commits
@@ -113,8 +124,10 @@ attribution metadata; it is not an on-chain signature proving authorship.
 3. Choose four distinct admin, registrar, pauser, and NFT-approver addresses so
    the role split is real rather than cosmetic.
 4. Run the full Foundry suite and a pinned Base fork deployment.
-5. Run `scripts/deployment/deploy-grid-catalog-v2.sh --prepare`.
-6. Review role addresses, source digest, bytecode, gas, and target chain.
+5. Set the explicit Ledger/Trezor deployer and run
+   `scripts/deployment/deploy-grid-catalog-v2.sh --prepare`.
+6. Review role addresses, git and dependency commits, compiler, source digest,
+   creation/runtime bytecode hashes, gas, and target chain.
 7. Deploy with `--send` and the Ledger only after explicit approval.
 8. Verify source, bytecode, roles, empty counts, and deployment receipt.
 9. Update `docs/ADDRESSES.md` and `deployments/base-mainnet.json`.
@@ -122,6 +135,11 @@ attribution metadata; it is not an on-chain signature proving authorship.
 11. Generate registration calldata with `scripts/catalog/build-plan.py`.
 12. Simulate each registration, review the decoded calldata, then sign using
     the registrar hardware wallet or Safe.
+
+The registration plan binds Base chain ID, catalog address, publisher, release
+metadata, content URIs, and model dependencies. Generated Ledger commands set an
+explicit registrar address and chain ID; Safe operators use the same reviewed
+raw calldata.
 
 ## Core migration
 
@@ -142,14 +160,19 @@ into V2. Migration is explicit and curated, not ID-preserving.
 
 The 2026-07-22 pre-deployment pass produced the following local evidence:
 
-- full Foundry suite: 80 passed, 0 failed; the Base fork case reported pass but
+- full Foundry suite: 83 passed, 0 failed; the Base fork case reported pass but
   explicitly skipped its RPC work because `BASE_RPC_URL` was unset;
 - focused `GridCatalogV2Test`: 18 passed, including delayed root-admin transfer,
   role separation, pause behavior, canonical requirements, and lifecycle checks;
-- canonical plan-builder unit tests: 6 passed;
-- `shellcheck` deployment script and `node --check` read SDK: passed;
-- deployed runtime bytecode: 12,871 bytes, below the EIP-170 limit;
-- Slither 0.11.3: no actionable finding after manual triage.
+- stateful invariants: three passed across 49,152 generated calls with no
+  reverts or discards;
+- canonical plan-builder unit tests: 10 passed;
+- isolated catalog coverage: 90.37% lines, 85.63% statements, 47.06% branches,
+  and 95.83% functions;
+- catalog formatting, `shellcheck`, `bash -n`, and `node --check`: passed;
+- deployed runtime bytecode: 12,801 bytes, leaving 11,775 bytes below EIP-170;
+- Slither, Aderyn, Semgrep, Mythril, and history-wide Gitleaks were run and
+  manually triaged.
 
 Slither reports seven false positives around three zero-hash existence checks
 and the NFT-eligibility view. The strict comparisons are intentional sentinels,
@@ -157,3 +180,7 @@ and registration rejects zero hashes. Its timestamp detector misattributes
 those hash and status checks because the records also contain `createdAt`;
 catalog validity does not depend on that timestamp. These results are supporting
 evidence only and do not replace the independent audit required before deploy.
+
+The complete evidence, remediated findings, scanner dispositions, local
+lifecycle rehearsal, and remaining launch gates are in
+`security-analysis/GRID_CATALOG_V2_LAUNCH_AUDIT.md`.

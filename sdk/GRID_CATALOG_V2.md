@@ -21,5 +21,5 @@ hardware wallet or Safe. Application code should not hold a catalog registrar
 key.
 
 Fetching a manifest or recipe URI is not enough to trust it: parse the JSON,
-apply Canonical JSON v1 from `docs/GRID_CATALOG_V2.md`, recompute SHA-256, and
+apply RFC 8785 JCS from `docs/GRID_CATALOG_V2.md`, recompute SHA-256, and
 compare it to the on-chain ID before use.

@@ -5,8 +5,12 @@ Verification and hardware-wallet deployment scripts for contracts on Base Mainne
 ## Setup
 
 ```bash
+git submodule update --init
 npm install
 ```
+
+The Foundry dependencies are pinned top-level submodules. Their optional nested
+test submodules are not required by this repository.
 
 ## interact-aipg-token.js
 
@@ -101,13 +105,16 @@ export CATALOG_ADMIN=0xYourBaseSafe
 export CATALOG_REGISTRAR=0xRegistrar
 export CATALOG_PAUSER=0xPauser
 export CATALOG_NFT_APPROVER=0xNftApprover
+export CATALOG_DEPLOYER=0xLedgerDeployer
 scripts/deployment/deploy-grid-catalog-v2.sh --prepare
 ```
 
 The `--send` path additionally requires `BASE_RPC_URL`, verifies the chain ID,
 requires four distinct role addresses, requires the Base mainnet admin to be a
-deployed contract, accepts only Ledger or Trezor signing, and verifies roles
-plus empty state after deployment.
+deployed contract, accepts only Ledger or Trezor signing, and refuses dirty
+source or dependency state. It fingerprints the compiler, dependency commits,
+creation bytecode, and runtime bytecode before signing, then verifies the
+receipt, exact deployed runtime, roles, and empty state after deployment.
 Do not invoke it until the contract audit and Safe plan are approved.
 
 Registration calldata is derived from reviewed files rather than hand-entered:

@@ -28,3 +28,8 @@ number_underscore = "preserve"
 [rpc_endpoints]
 base = "${BASE_RPC_URL}"
 base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
+
+[invariant]
+runs = 256
+depth = 64
+fail_on_revert = true

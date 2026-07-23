@@ -34,7 +34,10 @@ configuration runbook (bash, hardware-wallet signed).
 - **`catalog/build-plan.py`** — validates canonical model manifests and recipes, derives SHA-256
   IDs / artifact roots and keccak release keys, then emits deterministic `cast` calldata plus
   Ledger commands. It never signs or broadcasts.
-- `catalog/test_build_plan.py` covers deterministic output, duplicate-key rejection, and the
+- **`catalog/canonicalize.mjs`** — dependency-free RFC 8785 JCS implementation used by the plan
+  builder so Python, JavaScript, Rust, and Go verifiers derive the same content IDs.
+- `catalog/test_build_plan.py` covers deterministic output, Base chain binding, JCS number
+  serialization, duplicate-key rejection, immutable URIs, recipe metadata, and the
   worker-advertised model-name dependency check.
 
 ## Local Contracts
@@ -55,7 +58,9 @@ configuration runbook (bash, hardware-wallet signed).
 
 ## Verification
 
-—
+- `python3 -m unittest scripts/catalog/test_build_plan.py`
+- `node --check scripts/catalog/canonicalize.mjs`
+- `shellcheck scripts/deployment/deploy-grid-catalog-v2.sh`
 
 ## Child DOX Index
 

@@ -17,6 +17,8 @@ ADDRESS = re.compile(r"^0x[0-9a-fA-F]{40}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 MODALITIES = {"text": 1, "image": 2, "video": 4, "audio": 8, "3d": 16}
 JOB_TYPE_MODALITIES = {"text": 1, "image": 2, "video": 4, "audio": 8, "3d": 16}
+ARTIFACT_ROOT_DOMAIN = b"AIPG_ARTIFACT_ROOT_V1\x00"
+CANONICALIZER = pathlib.Path(__file__).with_name("canonicalize.mjs")
 MANIFEST_KEYS = {
     "schema",
     "slug",
@@ -30,7 +32,7 @@ MANIFEST_KEYS = {
     "license",
 }
 ARTIFACT_KEYS = {"role", "filename", "sha256", "size_bytes", "source_uri"}
-PLAN_KEYS = {"catalog_address", "publisher", "models", "recipes"}
+PLAN_KEYS = {"chain_id", "catalog_address", "publisher", "models", "recipes"}
 MODEL_ENTRY_KEYS = {"manifest_path", "manifest_uri"}
 RECIPE_ENTRY_KEYS = {
     "content_path",
@@ -40,14 +42,15 @@ RECIPE_ENTRY_KEYS = {
     "output_modalities",
     "required_model_releases",
 }
+RECIPE_CATALOG_KEYS = {
+    "schema",
+    "slug",
+    "version",
+    "outputModalities",
+    "requiredModelReleases",
+}
 MODEL_SIGNATURE = "registerModel((bytes32,bytes32,bytes32,bytes32,uint32,uint32,address,string))"
 RECIPE_SIGNATURE = "registerRecipe((bytes32,bytes32,bytes32,uint32,address,string,bytes32[]))"
-
-
-def canonical(value: Any) -> bytes:
-    return json.dumps(
-        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
-    ).encode("utf-8")
 
 
 def sha256_hex(value: bytes) -> str:
@@ -66,6 +69,15 @@ def calldata(signature: str, value: str) -> str:
         ["cast", "calldata", signature, value], check=True, text=True, capture_output=True
     )
     return completed.stdout.strip()
+
+
+def canonical_file(path: pathlib.Path) -> bytes:
+    completed = subprocess.run(
+        ["node", str(CANONICALIZER), str(path)],
+        check=True,
+        capture_output=True,
+    )
+    return completed.stdout
 
 
 def require_address(name: str, value: Any) -> str:
@@ -181,7 +193,11 @@ def validate_manifest(
         version,
         modality_mask(manifest.get("modalities")),
         minimum_vram,
-        sha256_hex(canonical(artifacts_sorted)),
+        sha256_hex(
+            ARTIFACT_ROOT_DOMAIN
+            + len(artifacts_sorted).to_bytes(4, "big")
+            + b"".join(bytes.fromhex(artifact["sha256"]) for artifact in artifacts_sorted)
+        ),
         tuple(sorted(worker_names)),
     )
 
@@ -194,6 +210,9 @@ def build(plan_path: pathlib.Path) -> dict[str, Any]:
     source = load_json(plan_path)
     require_exact_keys("registration plan", source, PLAN_KEYS)
     base = plan_path.parent
+    chain_id = source["chain_id"]
+    if chain_id not in (8453, 84532):
+        raise ValueError("chain_id must be Base mainnet (8453) or Base Sepolia (84532)")
     catalog_address = require_address("catalog_address", source.get("catalog_address"))
     publisher = require_address("publisher", source.get("publisher"))
     models = []
@@ -209,7 +228,7 @@ def build(plan_path: pathlib.Path) -> dict[str, Any]:
         path = (base / entry["manifest_path"]).resolve()
         manifest = load_json(path)
         slug, version, mask, min_vram, artifact_root, worker_names = validate_manifest(manifest, path)
-        manifest_hash = sha256_hex(canonical(manifest))
+        manifest_hash = sha256_hex(canonical_file(path))
         release = f"{slug}@{version}"
         if release in releases:
             raise ValueError(f"duplicate model release {release}")
@@ -234,7 +253,10 @@ def build(plan_path: pathlib.Path) -> dict[str, Any]:
                 "artifact_root": artifact_root,
                 "manifest_uri": uri,
                 "calldata": data,
-                "ledger_command": f"cast send {catalog_address} --data {data} --ledger --rpc-url $BASE_RPC_URL",
+                "ledger_command": (
+                    f"cast send {catalog_address} {data} --from $CATALOG_REGISTRAR "
+                    f"--ledger --chain {chain_id} --rpc-url $BASE_RPC_URL"
+                ),
             }
         )
 
@@ -259,6 +281,18 @@ def build(plan_path: pathlib.Path) -> dict[str, Any]:
         requirements = entry.get("required_model_releases")
         if not isinstance(requirements, list) or not 1 <= len(requirements) <= 8:
             raise ValueError(f"{path}: required_model_releases must contain 1-8 entries")
+        catalog_metadata = content["_grid"].get("catalog")
+        require_exact_keys(f"{path}: _grid.catalog", catalog_metadata, RECIPE_CATALOG_KEYS)
+        if catalog_metadata["schema"] != "aipg.recipe-catalog.v1":
+            raise ValueError(f"{path}: unsupported _grid.catalog schema")
+        if catalog_metadata["slug"] != slug or catalog_metadata["version"] != version:
+            raise ValueError(f"{path}: _grid.catalog release must match the registration plan")
+        if catalog_metadata["outputModalities"] != entry.get("output_modalities"):
+            raise ValueError(f"{path}: _grid.catalog outputModalities must match the registration plan")
+        if catalog_metadata["requiredModelReleases"] != requirements:
+            raise ValueError(
+                f"{path}: _grid.catalog requiredModelReleases must match the registration plan"
+            )
         try:
             release_records = [releases[value] for value in requirements]
         except KeyError as exc:
@@ -276,7 +310,7 @@ def build(plan_path: pathlib.Path) -> dict[str, Any]:
             )
         model_ids.sort()
         uri = require_content_uri("content_uri", entry.get("content_uri"))
-        content_hash = sha256_hex(canonical(content))
+        content_hash = sha256_hex(canonical_file(path))
         output_mask = modality_mask(entry.get("output_modalities"))
         job_type = content["_grid"].get("jobType")
         if job_type not in JOB_TYPE_MODALITIES:
@@ -304,12 +338,16 @@ def build(plan_path: pathlib.Path) -> dict[str, Any]:
                 "content_uri": uri,
                 "required_model_ids": model_ids,
                 "calldata": data,
-                "ledger_command": f"cast send {catalog_address} --data {data} --ledger --rpc-url $BASE_RPC_URL",
+                "ledger_command": (
+                    f"cast send {catalog_address} {data} --from $CATALOG_REGISTRAR "
+                    f"--ledger --chain {chain_id} --rpc-url $BASE_RPC_URL"
+                ),
             }
         )
 
     return {
         "schema": "aipg.grid-catalog-registration-plan.v1",
+        "chain_id": chain_id,
         "catalog_address": catalog_address,
         "publisher": publisher,
         "models": models,

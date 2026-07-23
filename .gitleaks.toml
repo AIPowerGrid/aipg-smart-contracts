@@ -1,0 +1,7 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public EVM addresses are identifiers, not credentials"
+regexTarget = "match"
+regexes = ['''0x[0-9a-fA-F]{40}''']
