@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import {
     AccessControlDefaultAdminRules
@@ -217,13 +217,18 @@ contract GridCatalogV2 is AccessControlDefaultAdminRules, Pausable {
         if (_recipeByRelease[releaseKey] != bytes32(0)) revert ReleaseExists();
 
         bytes32 previousModelId = bytes32(0);
-        for (uint256 i = 0; i < requirementCount; ++i) {
+        for (uint256 i = 0; i < requirementCount;) {
             bytes32 modelId = input.requiredModelIds[i];
-            if (i != 0 && uint256(modelId) <= uint256(previousModelId)) {
-                revert RequirementsNotSorted();
+            if (i != 0) {
+                if (uint256(modelId) <= uint256(previousModelId)) {
+                    revert RequirementsNotSorted();
+                }
             }
             if (!_models[modelId].active) revert InactiveRequiredModel();
             previousModelId = modelId;
+            unchecked {
+                ++i;
+            }
         }
 
         bytes32 requirementsHash = keccak256(abi.encode(input.requiredModelIds));
@@ -325,7 +330,7 @@ contract GridCatalogV2 is AccessControlDefaultAdminRules, Pausable {
         return _recipeByRelease[_releaseKey(slug, versionHash)];
     }
 
-    function isModelActive(bytes32 modelId) public view returns (bool) {
+    function isModelActive(bytes32 modelId) external view returns (bool) {
         return _models[modelId].active;
     }
 
@@ -341,10 +346,14 @@ contract GridCatalogV2 is AccessControlDefaultAdminRules, Pausable {
         RecipeRecord storage recipe = _recipes[recipeId];
         if (!recipe.active) return false;
         bytes32[] storage requirements = _recipeRequirements[recipeId];
-        for (uint256 i = 0; i < requirements.length; ++i) {
+        uint256 requirementCount = requirements.length;
+        for (uint256 i = 0; i < requirementCount;) {
             if (!_models[requirements[i]].active) return false;
+            unchecked {
+                ++i;
+            }
         }
-        return requirements.length > 0;
+        return requirementCount > 0;
     }
 
     function modelCount() external view returns (uint256) {
@@ -379,13 +388,20 @@ contract GridCatalogV2 is AccessControlDefaultAdminRules, Pausable {
         returns (bytes32[] memory result)
     {
         if (limit == 0 || limit > MAX_PAGE_SIZE) revert InvalidPageSize();
-        if (offset >= source.length) return new bytes32[](0);
+        uint256 sourceLength = source.length;
+        if (offset >= sourceLength) return new bytes32[](0);
 
-        uint256 end = offset + limit;
-        if (end > source.length) end = source.length;
-        result = new bytes32[](end - offset);
-        for (uint256 i = offset; i < end; ++i) {
-            result[i - offset] = source[i];
+        uint256 count = limit;
+        uint256 remaining = sourceLength - offset;
+        if (count > remaining) count = remaining;
+        result = new bytes32[](count);
+        uint256 sourceIndex = offset;
+        for (uint256 i = 0; i < count;) {
+            result[i] = source[sourceIndex];
+            unchecked {
+                ++i;
+                ++sourceIndex;
+            }
         }
     }
 }

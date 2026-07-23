@@ -1,0 +1,54 @@
+name: Contracts
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contracts-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out pinned source and dependencies
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          submodules: true
+          persist-credentials: false
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@b00af27efadbc7b4ca8b82abbd903b17cc874d2a
+        with:
+          version: v1.5.1
+
+      - name: Check catalog formatting
+        run: >
+          forge fmt --check
+          contracts/GridCatalogV2.sol
+          test/GridCatalogV2.t.sol
+          test/GridCatalogV2.invariant.t.sol
+
+      - name: Build contracts
+        run: forge build --sizes
+
+      - name: Run Foundry tests
+        run: forge test
+
+      - name: Test catalog plan builder
+        run: python3 -m unittest scripts/catalog/test_build_plan.py
+
+      - name: Check catalog and deployment scripts
+        run: |
+          node --check scripts/catalog/canonicalize.mjs
+          shellcheck scripts/deployment/deploy-grid-catalog-v2.sh
+          bash -n scripts/deployment/deploy-grid-catalog-v2.sh

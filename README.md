@@ -100,14 +100,26 @@ See [docs/GRID_CATALOG_V2.md](docs/GRID_CATALOG_V2.md).
 4. **Check findings:** `SECURITY_AUDIT_REPORT.md`
 5. **Verify on-chain:** Links in tables above
 
+Report vulnerabilities privately through [SECURITY.md](SECURITY.md), never in
+a public issue.
+
 ---
 
 ## 🔧 Quick Start
 
 ```bash
+git submodule update --init
+forge build
+forge test
+
+# Optional read-only token inspection
 npm install
 node scripts/interact-aipg-token.js
 ```
+
+OpenZeppelin Contracts and forge-std are pinned git submodules. Do not replace
+them with an untracked `forge install`; the recorded commits are part of the
+contract audit boundary.
 
 ---
 
@@ -118,7 +130,7 @@ node scripts/interact-aipg-token.js
 | AIPGTokenV2 | ✅ Live | 150M supply, **minting renounced** |
 | StakingVault | ✅ Live | Synthetix-style, no lock period |
 | Grid | ✅ Live | Modular proxy (EIP-2535) |
-| GridCatalogV2 | 🧪 Pre-deploy | Implemented and tested; audit required |
+| GridCatalogV2 | 🧪 Pre-deploy | Internally hardened; independent audit and launch gates remain |
 | GridNFT | 🗄️ Reference | Sepolia/reference only; not Base mainnet production |
 
 ---

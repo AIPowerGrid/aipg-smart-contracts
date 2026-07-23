@@ -8,6 +8,17 @@
     "requiredModels": [
       "example-video-model"
     ],
+    "catalog": {
+      "schema": "aipg.recipe-catalog.v1",
+      "slug": "example-video-recipe",
+      "version": "1.0.0",
+      "outputModalities": [
+        "video"
+      ],
+      "requiredModelReleases": [
+        "example-video-model@1.0.0"
+      ]
+    },
     "vars": {
       "prompt": "1.inputs.text"
     },

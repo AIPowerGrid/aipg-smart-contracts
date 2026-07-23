@@ -56,9 +56,14 @@ moves real money and is immutable once deployed.
 - **`deployments/base-mainnet.json`** — machine-readable deployed address manifest.
 - **`AUDIT_SCOPE.md` / `SECURITY_AUDIT_REPORT.md` / `security-analysis/`** — audit surface,
   findings, and flattened contracts. Read `AUDIT_SCOPE.md` before touching production contracts.
+- **`SECURITY.md`** — private vulnerability-reporting and coordinated-disclosure policy.
+- **`.github/workflows/contracts.yml`** — pinned-action CI for build, tests, catalog
+  formatting, builder tests, and deployment-script checks.
 - **`examples/`, `archive/`** — reference/usage snippets and retired material. Not durable
   boundaries; no DOX child.
-- `out/`, `cache/`, `lib/` (forge deps) — build/vendored. Never edited, no DOX child.
+- `out/`, `cache/` — generated Foundry output. Never edit or commit.
+- `lib/openzeppelin-contracts/`, `lib/forge-std/` — audit-pinned git submodules. Update only
+  through an explicit dependency review; never patch vendored code in place.
 
 ## Local Contracts
 
@@ -82,14 +87,19 @@ moves real money and is immutable once deployed.
   (see `test/`). Each `(periodId, worker)` claim is exactly-once on-chain.
 - New env vars / addresses for scripts: read from env, never commit keys; signing is
   hardware-wallet only (Ledger/Trezor) — see `scripts/`.
+- Run history-inclusive Gitleaks with `.gitleaks.toml` before public releases.
+  Public EVM addresses are allowlisted; a credential finding must be revoked or
+  otherwise resolved, never hidden with a broad allowlist.
 - Follow the existing Diamond conventions exactly (AppStorage slot, selector cuts, role gating);
   storage layout and selector clashes are silent value-loss bugs.
 
 ## Verification
 
+- `git submodule update --init` restores the exact audited dependency commits.
 - `forge build` (uses `via_ir`, `solc 0.8.24`) must compile clean.
 - `forge test` — facet tests run through a deployed Diamond harness (the production
   delegatecall path), not in isolation. Add/extend tests for any economic change.
+- `gitleaks git --redact --config .gitleaks.toml --log-opts='--all' .`
 
 ## Child DOX Index
 

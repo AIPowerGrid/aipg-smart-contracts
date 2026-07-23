@@ -10,8 +10,9 @@ the immutable identifiers registered in `GridCatalogV2`.
 - Production manifests must contain verified artifact hashes, sizes, sources,
   runtime requirements, and license metadata. Never invent or copy an
   unverified digest from a filename.
-- Canonical IDs are produced by `scripts/catalog/build-plan.py`; do not compute
-  or edit IDs by hand.
+- Canonical IDs are produced through RFC 8785 JCS by
+  `scripts/catalog/canonicalize.mjs` and `scripts/catalog/build-plan.py`; do not
+  compute or edit IDs by hand.
 - Example files are not registration candidates and must remain under
   `catalog/examples/`.
 - A registration plan may reference reviewed recipes in sibling repos, but a

@@ -15,7 +15,6 @@ artifacts/
 
 # Foundry
 out/
-lib/
 broadcast/
 
 # IDE
@@ -40,4 +39,3 @@ logs/
 # Test outputs
 coverage/
 .nyc_output/
-
