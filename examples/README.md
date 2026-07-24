@@ -12,15 +12,6 @@ Read GridNFT metadata from chain and recreate the parameters.
 node read-nft-and-recreate.js <tokenId>
 ```
 
-### nft-generation-framework.js
-Complete framework for generating AI art NFTs with validation.
-
-**Features:**
-- Model selection
-- Parameter validation
-- Recipe integration
-- Error handling
-
 ### mint-fun-nft-with-forced-params.js
 Example for minting NFTs with specific parameters.
 
