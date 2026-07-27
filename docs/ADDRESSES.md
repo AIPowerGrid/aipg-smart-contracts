@@ -53,6 +53,16 @@ The proxy currently exposes **12 module implementations**:
 |------|---------|
 | Admin / Owner | `0xA218db26ed545f3476e6c3E827b595cf2E182533` |
 
+### Operational accounts (not protocol contracts)
+
+| Account | Address | Status |
+|---------|---------|--------|
+| **Customer funding Safe** | [`0xd19a391FAB4aeFd5f59e4be4918364f57b9c5346`](https://basescan.org/address/0xd19a391FAB4aeFd5f59e4be4918364f57b9c5346) | Deployed Base Safe, verified 2-of-2 on 2026-07-27. Configured in Grid Core as the canonical-USDC customer-funding treasury, but deposits remain disabled pending the supervised canary. |
+
+This Safe is an operational custody endpoint, not a Grid module, protocol
+contract, worker-payout wallet, or source of contract authority. Grid Core
+stores only its public address; signer keys do not belong on application hosts.
+
 ---
 
 ## Reward / settlement contracts (deployed; claim rail not operational)

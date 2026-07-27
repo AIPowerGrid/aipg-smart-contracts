@@ -22,6 +22,16 @@
     "PaymentRouter": "0x3fF26503539F3e85E136fDA20042Cf2B4E3Ac65A"
   },
   "admin": "0xA218db26ed545f3476e6c3E827b595cf2E182533",
+  "operationalAccounts": {
+    "customerFundingSafe": {
+      "address": "0xd19a391FAB4aeFd5f59e4be4918364f57b9c5346",
+      "purpose": "Canonical-USDC customer funding treasury",
+      "safeOwnerCount": 2,
+      "safeThreshold": 2,
+      "verifiedOnChain": "2026-07-27",
+      "status": "dark-configured"
+    }
+  },
   "notDeployed": [],
   "rewardFacetsDeployed": "2026-06-15",
   "moduleCount": 12
