@@ -35,6 +35,7 @@ logs/
 *.pem
 *private*
 *secret*
+!.github/workflows/secret-scan.yml
 
 # Test outputs
 coverage/

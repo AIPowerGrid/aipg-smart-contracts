@@ -57,8 +57,8 @@ moves real money and is immutable once deployed.
 - **`AUDIT_SCOPE.md` / `SECURITY_AUDIT_REPORT.md` / `security-analysis/`** — audit surface,
   findings, and flattened contracts. Read `AUDIT_SCOPE.md` before touching production contracts.
 - **`SECURITY.md`** — private vulnerability-reporting and coordinated-disclosure policy.
-- **`.github/workflows/contracts.yml`** — pinned-action CI for build, tests, catalog
-  formatting, builder tests, and deployment-script checks.
+- **`.github/workflows/`** — pinned-action contract CI plus checksum-verified
+  secret and operational-infrastructure scanning.
 - **`examples/`, `archive/`** — reference/usage snippets and retired material. Not durable
   boundaries; no DOX child.
 - `out/`, `cache/` — generated Foundry output. Never edit or commit.
@@ -100,6 +100,8 @@ moves real money and is immutable once deployed.
 - `forge test` — facet tests run through a deployed Diamond harness (the production
   delegatecall path), not in isolation. Add/extend tests for any economic change.
 - `gitleaks git --redact --config .gitleaks.toml --log-opts='--all' .`
+  scans all history before public releases; the CI gate separately scans the
+  current tracked source tree on every push and pull request.
 
 ## Child DOX Index
 
