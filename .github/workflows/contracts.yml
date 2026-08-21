@@ -29,6 +29,18 @@ jobs:
         with:
           version: v1.5.1
 
+      - name: Set up Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install locked JavaScript dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Audit production JavaScript dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Check catalog formatting
         run: >
           forge fmt --check
@@ -47,6 +59,9 @@ jobs:
 
       - name: Check catalog and deployment scripts
         run: |
+          node --check scripts/interact-aipg-token.js
+          node --check scripts/add-recipe-test.js
+          node --check scripts/deployment/upgrade-modelvault-facet.js
           node --check scripts/catalog/canonicalize.mjs
           shellcheck scripts/deployment/deploy-grid-catalog-v2.sh
           bash -n scripts/deployment/deploy-grid-catalog-v2.sh

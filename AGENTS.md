@@ -57,13 +57,17 @@ moves real money and is immutable once deployed.
 - **`AUDIT_SCOPE.md` / `SECURITY_AUDIT_REPORT.md` / `security-analysis/`** — audit surface,
   findings, and flattened contracts. Read `AUDIT_SCOPE.md` before touching production contracts.
 - **`SECURITY.md`** — private vulnerability-reporting and coordinated-disclosure policy.
-- **`.github/workflows/`** — pinned-action contract CI plus checksum-verified
-  secret and operational-infrastructure scanning.
+- **`.github/workflows/`** — pinned-action contract CI, lock-enforced npm
+  dependency audit, plus checksum-verified secret and
+  operational-infrastructure scanning.
 - **`examples/`, `archive/`** — reference/usage snippets and retired material. Not durable
   boundaries; no DOX child.
 - `out/`, `cache/` — generated Foundry output. Never edit or commit.
 - `lib/openzeppelin-contracts/`, `lib/forge-std/` — audit-pinned git submodules. Update only
   through an explicit dependency review; never patch vendored code in place.
+- `package.json` / `package-lock.json` — exact ethers v6 dependency and npm
+  integrity lock for SDK/operator scripts. CI installs with scripts disabled;
+  update both together and pass `npm audit`.
 
 ## Local Contracts
 
@@ -99,6 +103,8 @@ moves real money and is immutable once deployed.
 - `forge build` (uses `via_ir`, `solc 0.8.24`) must compile clean.
 - `forge test` — facet tests run through a deployed Diamond harness (the production
   delegatecall path), not in isolation. Add/extend tests for any economic change.
+- `npm ci --ignore-scripts && npm audit --omit=dev --audit-level=high` verifies
+  the exact JavaScript dependency graph used by SDK/operator scripts.
 - `gitleaks git --redact --config .gitleaks.toml --log-opts='--all' .`
   scans all history before public releases; the CI gate separately scans the
   current tracked source tree on every push and pull request.
