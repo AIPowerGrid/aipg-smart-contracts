@@ -129,8 +129,7 @@ contract GridRewardDistributor is AccessControl, Pausable, ReentrancyGuard {
         require(to != address(0), "Distributor: zero to");
         // Never touch USDC already owed to workers for reported, unclaimed periods.
         require(
-            poolBalance() - amount >= totalCommitted - totalPaidOut,
-            "Distributor: committed funds"
+            poolBalance() - amount >= totalCommitted - totalPaidOut, "Distributor: committed funds"
         );
         payoutToken.safeTransfer(to, amount);
         emit Withdrawn(to, amount, reason);
@@ -241,7 +240,8 @@ contract GridRewardDistributor is AccessControl, Pausable, ReentrancyGuard {
 
         uint256 cap = report.poolAllocation;
         uint256 paid = paidPerPeriod[periodId];
-        uint256 added;
+        uint256 added = 0;
+        uint256[] memory amounts = new uint256[](workers.length);
         for (uint256 i = 0; i < workers.length; i++) {
             address worker = workers[i];
             uint256 workerDen = den[i];
@@ -261,12 +261,22 @@ contract GridRewardDistributor is AccessControl, Pausable, ReentrancyGuard {
             periodClaimed[periodId][worker] = true;
             paid += amount;
             added += amount;
-            payoutToken.safeTransfer(worker, amount);
-
-            emit Claimed(periodId, worker, msg.sender, workerDen, amount);
+            amounts[i] = amount;
         }
+
+        // Finalize all accounting before the first external token call. Keeping
+        // these writes outside the transfer loop also avoids one SSTORE per row.
         paidPerPeriod[periodId] = paid;
         totalPaidOut += added;
+
+        for (uint256 i = 0; i < workers.length; i++) {
+            uint256 amount = amounts[i];
+            if (amount == 0) continue;
+
+            address worker = workers[i];
+            payoutToken.safeTransfer(worker, amount);
+            emit Claimed(periodId, worker, msg.sender, den[i], amount);
+        }
     }
 
     // ============ VIEWS ============
@@ -275,11 +285,12 @@ contract GridRewardDistributor is AccessControl, Pausable, ReentrancyGuard {
         return payoutToken.balanceOf(address(this));
     }
 
-    function previewClaim(uint256 periodId, address worker, uint256 workerDen, bytes32[] calldata proof)
-        external
-        view
-        returns (uint256 amount, bool valid)
-    {
+    function previewClaim(
+        uint256 periodId,
+        address worker,
+        uint256 workerDen,
+        bytes32[] calldata proof
+    ) external view returns (uint256 amount, bool valid) {
         Report storage report = reports[periodId];
         if (report.denRoot == bytes32(0)) return (0, false);
         if (periodClaimed[periodId][worker]) return (0, false);

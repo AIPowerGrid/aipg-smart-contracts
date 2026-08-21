@@ -58,8 +58,9 @@ moves real money and is immutable once deployed.
   findings, and flattened contracts. Read `AUDIT_SCOPE.md` before touching production contracts.
 - **`SECURITY.md`** — private vulnerability-reporting and coordinated-disclosure policy.
 - **`.github/workflows/`**, `.gitleaks.toml`, and `.gitleaksignore` — pinned-action
-  contract CI, lock-enforced npm dependency audit, plus checksum-verified
-  tracked-tree and complete reachable-history scanning. Historical scan
+  contract CI, lock-enforced npm and Slither dependency graphs,
+  deployable-contract static analysis, and checksum-verified complete
+  reachable-history and operational-infrastructure scanning. Historical secret
   exceptions are exact reviewed fingerprints only.
 - **`examples/`, `archive/`** — reference/usage snippets and retired material. Not durable
   boundaries; no DOX child.
@@ -106,9 +107,13 @@ moves real money and is immutable once deployed.
   delegatecall path), not in isolation. Add/extend tests for any economic change.
 - `npm ci --ignore-scripts && npm audit --omit=dev --audit-level=high` verifies
   the exact JavaScript dependency graph used by SDK/operator scripts.
-- `gitleaks detect --source . --no-git --config .gitleaks.toml --redact`, then
-  `gitleaks git --redact --config .gitleaks.toml --log-opts=HEAD .` from a full
-  clone. The required CI gate runs both on every push and pull request; use
+- `slither .` fails on medium-or-higher findings in deployable contracts. Its
+  config excludes vendored, archived, flattened, and explicitly superseded
+  standalone reference contracts; do not expand that exclusion list to hide a
+  finding in a deployable contract.
+- `gitleaks git --redact --config .gitleaks.toml --log-opts=HEAD .` from a full
+  clone scans the complete history reachable from the candidate commit. The
+  required CI gate runs it on every push and pull request; use
   `--log-opts='--all'` during a coordinated audit of every local ref.
 
 ## Child DOX Index

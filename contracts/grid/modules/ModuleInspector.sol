@@ -10,20 +10,19 @@ import "../libraries/LibGrid.sol";
  * @dev Introspection for Grid modules
  */
 contract ModuleInspector is IModuleInspector, IERC165 {
-    
     function modules() external view override returns (Module[] memory modules_) {
         LibGrid.GridCoreStorage storage gs = LibGrid.gridStorage();
         uint256 selectorCount = gs.selectorCount;
         modules_ = new Module[](selectorCount);
         uint16[] memory numModuleSelectors = new uint16[](selectorCount);
-        uint256 numModules;
-        
+        uint256 numModules = 0;
+
         for (uint256 i; i < selectorCount; i++) {
             uint256 slotIndex = i >> 3;
             uint256 slotPosition = (i & 7) << 5;
             bytes4 selector = bytes4(gs.selectorSlots[slotIndex] << slotPosition);
             address moduleAddress_ = address(bytes20(gs.modules[selector]));
-            bool exists;
+            bool exists = false;
             for (uint256 j; j < numModules; j++) {
                 if (modules_[j].moduleAddress == moduleAddress_) {
                     exists = true;
@@ -37,14 +36,14 @@ contract ModuleInspector is IModuleInspector, IERC165 {
                 numModules++;
             }
         }
-        
+
         // Resize and populate selectors
         Module[] memory trimmedModules = new Module[](numModules);
         for (uint256 i; i < numModules; i++) {
             trimmedModules[i].moduleAddress = modules_[i].moduleAddress;
             trimmedModules[i].functionSelectors = new bytes4[](numModuleSelectors[i]);
         }
-        
+
         uint16[] memory selectorIndices = new uint16[](numModules);
         for (uint256 i; i < selectorCount; i++) {
             uint256 slotIndex = i >> 3;
@@ -59,16 +58,21 @@ contract ModuleInspector is IModuleInspector, IERC165 {
                 }
             }
         }
-        
+
         return trimmedModules;
     }
 
-    function moduleFunctionSelectors(address _module) external view override returns (bytes4[] memory selectors_) {
+    function moduleFunctionSelectors(address _module)
+        external
+        view
+        override
+        returns (bytes4[] memory selectors_)
+    {
         LibGrid.GridCoreStorage storage gs = LibGrid.gridStorage();
         uint256 selectorCount = gs.selectorCount;
-        uint256 numSelectors;
+        uint256 numSelectors = 0;
         selectors_ = new bytes4[](selectorCount);
-        
+
         for (uint256 i; i < selectorCount; i++) {
             uint256 slotIndex = i >> 3;
             uint256 slotPosition = (i & 7) << 5;
@@ -79,7 +83,7 @@ contract ModuleInspector is IModuleInspector, IERC165 {
                 numSelectors++;
             }
         }
-        
+
         bytes4[] memory trimmedSelectors = new bytes4[](numSelectors);
         for (uint256 i; i < numSelectors; i++) {
             trimmedSelectors[i] = selectors_[i];
@@ -91,14 +95,14 @@ contract ModuleInspector is IModuleInspector, IERC165 {
         LibGrid.GridCoreStorage storage gs = LibGrid.gridStorage();
         uint256 selectorCount = gs.selectorCount;
         addresses_ = new address[](selectorCount);
-        uint256 numModules;
-        
+        uint256 numModules = 0;
+
         for (uint256 i; i < selectorCount; i++) {
             uint256 slotIndex = i >> 3;
             uint256 slotPosition = (i & 7) << 5;
             bytes4 selector = bytes4(gs.selectorSlots[slotIndex] << slotPosition);
             address moduleAddress_ = address(bytes20(gs.modules[selector]));
-            bool exists;
+            bool exists = false;
             for (uint256 j; j < numModules; j++) {
                 if (addresses_[j] == moduleAddress_) {
                     exists = true;
@@ -110,7 +114,7 @@ contract ModuleInspector is IModuleInspector, IERC165 {
                 numModules++;
             }
         }
-        
+
         address[] memory trimmedAddresses = new address[](numModules);
         for (uint256 i; i < numModules; i++) {
             trimmedAddresses[i] = addresses_[i];
@@ -118,7 +122,12 @@ contract ModuleInspector is IModuleInspector, IERC165 {
         return trimmedAddresses;
     }
 
-    function moduleAddress(bytes4 _functionSelector) external view override returns (address moduleAddress_) {
+    function moduleAddress(bytes4 _functionSelector)
+        external
+        view
+        override
+        returns (address moduleAddress_)
+    {
         LibGrid.GridCoreStorage storage gs = LibGrid.gridStorage();
         moduleAddress_ = address(bytes20(gs.modules[_functionSelector]));
     }

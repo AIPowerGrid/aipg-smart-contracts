@@ -299,17 +299,23 @@ contract GridCatalogV2 is AccessControlDefaultAdminRules, Pausable {
 
     function getModel(bytes32 modelId) external view returns (ModelRecord memory) {
         ModelRecord memory model = _models[modelId];
+        // Zero is forbidden at registration and is the canonical absence sentinel.
+        // slither-disable-next-line incorrect-equality
         if (model.manifestHash == bytes32(0)) revert RecordNotFound();
         return model;
     }
 
     function getRecipe(bytes32 recipeId) external view returns (RecipeRecord memory) {
         RecipeRecord memory recipe = _recipes[recipeId];
+        // Zero is forbidden at registration and is the canonical absence sentinel.
+        // slither-disable-next-line incorrect-equality
         if (recipe.contentHash == bytes32(0)) revert RecordNotFound();
         return recipe;
     }
 
     function getRecipeRequirements(bytes32 recipeId) external view returns (bytes32[] memory) {
+        // Zero is forbidden at registration and is the canonical absence sentinel.
+        // slither-disable-next-line incorrect-equality
         if (_recipes[recipeId].contentHash == bytes32(0)) revert RecordNotFound();
         return _recipeRequirements[recipeId];
     }

@@ -1,0 +1,7 @@
+{
+  "exclude_dependencies": true,
+  "exclude_informational": true,
+  "exclude_low": true,
+  "fail_on": "medium",
+  "filter_paths": "lib|archive|security-analysis|contracts/BondedWorkerRegistry.sol|contracts/ModelRegistry.sol|contracts/RecipeVault.sol|contracts/GridNFT.sol"
+}

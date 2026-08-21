@@ -22,6 +22,30 @@ ModelVault and RecipeVault data. Audit at minimum:
 See `docs/GRID_CATALOG_V2.md`. A passing legacy audit does not approve this
 contract or authorize deployment.
 
+### GridRewardDistributor - NOT DEPLOYED
+
+**Status:** implemented and tested; no Base address
+**Priority:** CRITICAL before deployment or funding
+
+Standalone token-generic Merkle distributor intended to replace the custodial
+worker-payout sender with permissionless worker claims. It is not a Diamond
+facet and does not replace the existing reward modules merely by being
+deployed. Audit at minimum:
+
+1. Merkle leaf/proof compatibility with the off-chain settlement publisher.
+2. Exactly-once claims, duplicate rows, rounding dust, and corrupt `totalDen` bounds.
+3. Checks-effects-interactions and adversarial ERC20 callback behavior in single
+   and batch claims.
+4. Cross-period solvency, committed-fund withdrawal limits, and lifetime accounting.
+5. Reporter, admin, pauser, and Safe/multisig role separation and recovery.
+6. Payout-token assumptions, decimals, fee-on-transfer/rebasing behavior, and funding.
+7. Epoch publication, IPFS evidence availability, claim UX, and cutover from the
+   custodial payout rail.
+8. Deployment-script chain, token, admin, role, bytecode, and post-deploy verification.
+
+A clean Foundry/Slither run is a development gate, not an independent audit or
+authorization to deploy, fund, or enable this payout rail.
+
 ## Focus Contracts (Production)
 
 ### 1. AIPGTokenV2 ✅ DEPLOYED
