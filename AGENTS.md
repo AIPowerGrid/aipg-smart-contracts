@@ -57,9 +57,10 @@ moves real money and is immutable once deployed.
 - **`AUDIT_SCOPE.md` / `SECURITY_AUDIT_REPORT.md` / `security-analysis/`** — audit surface,
   findings, and flattened contracts. Read `AUDIT_SCOPE.md` before touching production contracts.
 - **`SECURITY.md`** — private vulnerability-reporting and coordinated-disclosure policy.
-- **`.github/workflows/`** — pinned-action contract CI, lock-enforced npm
-  dependency audit, plus checksum-verified secret and
-  operational-infrastructure scanning.
+- **`.github/workflows/`**, `.gitleaks.toml`, and `.gitleaksignore` — pinned-action
+  contract CI, lock-enforced npm dependency audit, plus checksum-verified
+  tracked-tree and complete reachable-history scanning. Historical scan
+  exceptions are exact reviewed fingerprints only.
 - **`examples/`, `archive/`** — reference/usage snippets and retired material. Not durable
   boundaries; no DOX child.
 - `out/`, `cache/` — generated Foundry output. Never edit or commit.
@@ -105,9 +106,10 @@ moves real money and is immutable once deployed.
   delegatecall path), not in isolation. Add/extend tests for any economic change.
 - `npm ci --ignore-scripts && npm audit --omit=dev --audit-level=high` verifies
   the exact JavaScript dependency graph used by SDK/operator scripts.
-- `gitleaks git --redact --config .gitleaks.toml --log-opts='--all' .`
-  scans all history before public releases; the CI gate separately scans the
-  current tracked source tree on every push and pull request.
+- `gitleaks detect --source . --no-git --config .gitleaks.toml --redact`, then
+  `gitleaks git --redact --config .gitleaks.toml --log-opts=HEAD .` from a full
+  clone. The required CI gate runs both on every push and pull request; use
+  `--log-opts='--all'` during a coordinated audit of every local ref.
 
 ## Child DOX Index
 

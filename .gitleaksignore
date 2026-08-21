@@ -1,0 +1,12 @@
+# Reviewed 2026-08-21. Exact historical fingerprints only.
+#
+# The retired frontend example contains one historical 22-character API
+# credential that production rejects with HTTP 401. The other entries are
+# retired internal-address and developer-path disclosures. This file records no
+# secret value and must never contain a broad rule, path, or regex exclusion.
+88575e8f974882ae0424c0ac7219e423ea5bbf5a:AGENTS.md:aipg-local-dev-path:64
+a3401513206496a7623d969dc5c0859f17405c39:examples/nft-generation-framework.js:aipg-internal-ip:11
+a3401513206496a7623d969dc5c0859f17405c39:frontend/frontend/README.md:aipg-internal-ip:39
+a3401513206496a7623d969dc5c0859f17405c39:frontend/frontend/app.js:generic-api-key:1326
+a3401513206496a7623d969dc5c0859f17405c39:frontend/frontend/cors-proxy.js:aipg-internal-ip:5
+a3401513206496a7623d969dc5c0859f17405c39:frontend/frontend/server.js:aipg-internal-ip:6
