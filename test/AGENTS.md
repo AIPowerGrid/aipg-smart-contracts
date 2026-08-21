@@ -13,6 +13,8 @@ Diamond so they exercise the production delegatecall + selector-routing + AppSto
   deactivation, NFT-approval, pause, and pagination invariants.
 - `GridCatalogV2.invariant.t.sol` — stateful adversarial checks for inventory uniqueness,
   release mappings, pagination, dependency-derived execution/NFT status, and role isolation.
+- `GridRewardDistributor.t.sol` / `.fork.t.sol` — standalone distributor accounting,
+  exactly-once claims, adversarial token callbacks, and real-USDC compatibility.
 - `utils/DiamondHarness.sol` — base test fixture: deploys a fresh `Grid`, cuts in the facets,
   wires roles, exposes the proxy address typed as each facet interface. Most tests inherit this.
 - `utils/MockAIPG.sol` — mock ERC20 stand-in for the AIPG token in bond/reward flows.

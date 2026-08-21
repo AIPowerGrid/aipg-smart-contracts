@@ -16,6 +16,8 @@ facets, shared state.
   addresses, grants the admin the DEFAULT_ADMIN/ADMIN/REGISTRAR/ANCHOR/PAUSER roles (reward/
   reporter roles are granted later via `scripts/deployment/configure-rewards.sh`), and sets
   `minBondAmount` (1000 AIPG) and `maxWorkflowBytes` (100KB) defaults.
+- **`GridRewardDistributor.sol`** — standalone, token-generic Merkle payout distributor. Despite
+  its location, it does not use Diamond storage or delegatecall and has no mainnet deployment yet.
 - **`libraries/`**
   - `LibGrid.sol` — EIP-2535 routing core: selector→facet map, `updateModules` (add/replace/
     remove), `enforceIsOwner`, owner storage. Its own dedicated storage slot

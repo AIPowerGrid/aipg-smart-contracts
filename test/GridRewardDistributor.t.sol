@@ -19,6 +19,31 @@ contract MockUSDC is ERC20 {
     }
 }
 
+/// @dev Adversarial token that observes distributor accounting during transfer.
+contract AccountingObserverUSDC is MockUSDC {
+    GridRewardDistributor public distributor;
+    uint256 public observedPeriod;
+    uint256 public observedPaid;
+    uint256 public observedTotalPaid;
+    uint256 public observations;
+
+    function observe(GridRewardDistributor distributor_, uint256 periodId) external {
+        distributor = distributor_;
+        observedPeriod = periodId;
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
+        super._beforeTokenTransfer(from, to, amount);
+        if (address(distributor) != address(0) && from == address(distributor)) {
+            if (observations == 0) {
+                observedPaid = distributor.paidPerPeriod(observedPeriod);
+                observedTotalPaid = distributor.totalPaidOut();
+            }
+            observations++;
+        }
+    }
+}
+
 contract GridRewardDistributorTest is Test {
     GridRewardDistributor dist;
     MockUSDC usdc;
@@ -256,6 +281,44 @@ contract GridRewardDistributorTest is Test {
         bytes32[][] memory ps = new bytes32[][](2);
         vm.expectRevert("Distributor: length mismatch");
         dist.claimBatch(1, ws, ds, ps);
+    }
+
+    function test_claimBatch_finalizesAccountingBeforeTokenTransfers() public {
+        AccountingObserverUSDC observedToken = new AccountingObserverUSDC();
+        GridRewardDistributor observedDist =
+            new GridRewardDistributor(IERC20(address(observedToken)), admin);
+        observedToken.mint(address(this), 100 * USDC);
+        observedToken.approve(address(observedDist), 100 * USDC);
+        observedDist.fund(100 * USDC);
+
+        vm.startPrank(admin);
+        observedDist.grantRole(observedDist.REPORTER_ROLE(), reporter);
+        observedDist.setPeriodAllocation(100 * USDC, "test");
+        vm.stopPrank();
+
+        bytes32 la = _leaf(alice, 60e6);
+        bytes32 lb = _leaf(bob, 40e6);
+        vm.prank(reporter);
+        observedDist.reportPeriod(1, _root2(la, lb), 100e6, "ipfs://x");
+
+        address[] memory ws = new address[](2);
+        ws[0] = alice;
+        ws[1] = bob;
+        uint256[] memory ds = new uint256[](2);
+        ds[0] = 60e6;
+        ds[1] = 40e6;
+        bytes32[][] memory ps = new bytes32[][](2);
+        ps[0] = new bytes32[](1);
+        ps[0][0] = lb;
+        ps[1] = new bytes32[](1);
+        ps[1][0] = la;
+
+        observedToken.observe(observedDist, 1);
+        observedDist.claimBatch(1, ws, ds, ps);
+
+        assertEq(observedToken.observations(), 2);
+        assertEq(observedToken.observedPaid(), 100 * USDC);
+        assertEq(observedToken.observedTotalPaid(), 100 * USDC);
     }
 
     // ---------- SECURITY: overpay cap bounds a corrupt report ----------

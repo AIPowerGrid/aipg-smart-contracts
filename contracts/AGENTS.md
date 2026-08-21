@@ -13,6 +13,9 @@ EIP-2535 Diamond under `grid/`.
   `notifyRewardAmount`, no lock). Live: `0x3ED14A6D5A48614D77f313389611410d38fd8277`.
 - **`GridCatalogV2.sol`** — standalone, content-addressed model-manifest and recipe registry.
   It supersedes the legacy Diamond vault data once deployed; no mainnet address exists yet.
+- **`grid/GridRewardDistributor.sol`** — standalone token-generic Merkle payout distributor.
+  It is predeployment code and is not a Diamond facet; every value-path change requires its
+  dedicated Foundry tests and a clean Slither run.
 - **`grid/`** — the live Grid Diamond (proxy + facets + storage). Owned in its own AGENTS.md.
 - **`interfaces/`** — `IAIPGToken`, `IStakingVault`, `ISynthetix`. Shared ABIs for the standalone
   contracts. Trivial; no DOX child.
