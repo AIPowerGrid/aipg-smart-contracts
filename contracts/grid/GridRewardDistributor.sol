@@ -264,8 +264,8 @@ contract GridRewardDistributor is AccessControl, Pausable, ReentrancyGuard {
             amounts[i] = amount;
         }
 
-        // Finalize all accounting before the first external token call. Keeping
-        // these writes outside the transfer loop also avoids one SSTORE per row.
+        // Finalize all aggregate accounting before the first external token
+        // call so callbacks cannot observe a partially settled batch.
         paidPerPeriod[periodId] = paid;
         totalPaidOut += added;
 
