@@ -44,6 +44,10 @@ and the reward/settlement economy.
 - **Value-handling facets (WorkerRegistry, RewardPool, PaymentRouter) are the money path:** keep
   claim/bond/slash idempotent, check-effects-interactions, and ERC20 return values. Every change
   here needs a matching `test/` case (these are the tested ones).
+- Worker bonds and reward liquidity share the Diamond token balance but not accounting:
+  `PaymentRouter` must enforce `totalPaidOut + amount <= totalDeposited`, and
+  `RewardPool.poolBalance()` must exclude `totalBonded`. Preserve
+  `aipgToken.balanceOf(diamond) >= totalBonded` across every value path.
 - Merkle convention is fixed across `JobAnchor`/`DenReporter`/`PaymentRouter` — keep leaf
   encoding and pairwise hashing byte-identical to the off-chain settlement bot or proofs fail.
 

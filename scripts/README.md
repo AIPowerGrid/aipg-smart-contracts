@@ -95,6 +95,28 @@ idempotent only when the existing recipe bytes, root, metadata, and permissions
 match exactly. Set `HWFLAG=--trezor` to use a Trezor instead of the default
 Ledger. Raw private keys are intentionally unsupported.
 
+## Reward Bond-Reserve Upgrade
+
+`deployment/deploy-reward-facets.sh` upgrades RewardPool and PaymentRouter together so reward
+claims cannot consume AIPG held as worker bonds. The default mode compiles, runs the contract
+suite, validates every selector, and checks live accounting without signing:
+
+```bash
+scripts/deployment/deploy-reward-facets.sh --prepare
+```
+
+The `--send` path requires `CONFIRM=YES` and a clean reviewed commit. It deploys both facets with
+Ledger or Trezor, verifies exact runtime bytecode, and prints one atomic Safe transaction when
+the Diamond owner is a contract. It does not replace DenReporter or change roles, balances,
+period settings, or WorkerRegistry. After the Safe executes, verify both facet addresses:
+
+```bash
+EXPECTED_RP_FACET=0x... EXPECTED_PR_FACET=0x... \
+  scripts/deployment/deploy-reward-facets.sh --verify
+```
+
+Do not deploy the cooldown-backed WorkerRegistry until this reserve guard is live and verified.
+
 ## GridCatalogV2
 
 The V2 catalog is not deployed. Prepare a deterministic deployment plan with

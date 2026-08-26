@@ -12,8 +12,9 @@ configuration runbook (bash, hardware-wallet signed).
   its former raw-private-key send path is retired.
 - `README.md` — script usage.
 - **`deployment/`** — mainnet change runbook (run in order, admin hardware wallet):
-  - `deploy-reward-facets.sh` — deploy RewardPool/DenReporter/PaymentRouter + cut into the live
-    Grid in one atomic `updateModules`.
+  - `deploy-reward-facets.sh` — prepare-by-default atomic RewardPool + PaymentRouter
+    replacement that preserves DenReporter and verifies reward/bond accounting before and
+    after the Safe cut. Its current purpose is the bond-principal reserve guard.
   - `configure-rewards.sh` — fund pool (`depositRewards`), set period allocation, grant
     `REPORTER_ROLE` to the settlement bot's hot wallet.
   - `deploy-worker-bonding-facet.sh` — **NOT YET WRITTEN (do not deploy the WorkerRegistry
@@ -48,6 +49,9 @@ configuration runbook (bash, hardware-wallet signed).
   (`0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609`); keep in sync with `docs/ADDRESSES.md`.
 - Deploy scripts mutate **live mainnet immutable state**. Run `deployment/` steps in documented
   order; each cut is one-way. Verify selectors and roles before executing.
+- Reward and worker-bond facets share one token custodian. Upgrade RewardPool and
+  PaymentRouter atomically before enabling bonded workers; never deploy a bonding facet while
+  live claims can treat `totalBonded` as reward liquidity.
 - RecipeVault does not recompute `recipeRoot` from `workflowData`; registration scripts must
   canonicalize and verify the content digest before any hardware-wallet broadcast. A stored
   recipe is provenance data, not Core authorization; the signed profile allowlist is authoritative.
@@ -61,6 +65,7 @@ configuration runbook (bash, hardware-wallet signed).
 - `python3 -m unittest scripts/catalog/test_build_plan.py`
 - `node --check scripts/catalog/canonicalize.mjs`
 - `shellcheck scripts/deployment/deploy-grid-catalog-v2.sh`
+- `shellcheck scripts/deployment/deploy-reward-facets.sh`
 
 ## Child DOX Index
 

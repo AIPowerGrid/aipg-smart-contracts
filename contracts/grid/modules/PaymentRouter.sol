@@ -115,6 +115,11 @@ contract PaymentRouter {
         uint256 newPaid = s.paidPerPeriod[periodId] + amount;
         require(newPaid <= report.poolAllocation, "PaymentRouter: period overpay");
 
+        // Reward accounting is separate from worker principal even though both
+        // balances are physically held by the Diamond. Never let an
+        // underfunded reward period consume bonded worker funds.
+        require(s.totalPaidOut + amount <= s.totalDeposited, "PaymentRouter: exceeds rewards");
+
         // CEI: mark claimed before transferring.
         s.periodClaimed[periodId][worker] = true;
         s.paidPerPeriod[periodId] = newPaid;
@@ -160,6 +165,11 @@ contract PaymentRouter {
         uint256 newPaid = s.paidPerPeriod[periodId] + amount;
         if (newPaid > report.poolAllocation) return;
 
+        // An exhausted reward pool is a systemic accounting failure, like a
+        // failed token transfer, so revert the batch instead of silently
+        // marking later workers unpaid. Bonded principal is never liquidity.
+        require(s.totalPaidOut + amount <= s.totalDeposited, "PaymentRouter: exceeds rewards");
+
         // CEI: mark claimed/paid before transferring. A FAILED transfer reverts
         // the batch (rolling this row back) instead of leaving the worker marked
         // paid-but-unpaid — a transfer failure is systemic (misfunded pool), not
@@ -194,12 +204,20 @@ contract PaymentRouter {
 
         if (report.denRoot == bytes32(0)) return (0, false);
         if (s.periodClaimed[periodId][worker]) return (0, false);
-        if (workerDen == 0 || report.totalDen == 0) return (0, false);
+        if (worker == address(0) || workerDen == 0 || report.totalDen == 0) return (0, false);
 
         bytes32 leaf = keccak256(abi.encodePacked(worker, workerDen));
         if (!_verify(proof, report.denRoot, leaf)) return (0, false);
 
         amount = (workerDen * report.poolAllocation) / report.totalDen;
+        if (amount == 0) return (0, false);
+        uint256 periodPaid = s.paidPerPeriod[periodId];
+        if (periodPaid > report.poolAllocation || amount > report.poolAllocation - periodPaid) {
+            return (0, false);
+        }
+        if (s.totalPaidOut > s.totalDeposited || amount > s.totalDeposited - s.totalPaidOut) {
+            return (0, false);
+        }
         valid = true;
     }
 
