@@ -16,6 +16,36 @@ test submodules are not required by this repository.
 
 Read-only interaction with AIPGTokenV2 contract.
 
+## WorkerRegistry bonding candidate
+
+`deployment/deploy-worker-bonding-facet.sh` is the prepare-first deployment
+runbook for the **review candidate** WorkerRegistry upgrade. The upgrade is not
+deployed. Its default mode builds and tests the exact checkout, validates all 16
+selectors against both the compiler and `cast`, and classifies the live selector
+cut without signing or broadcasting:
+
+```bash
+RPC=https://mainnet.base.org \
+  ./scripts/deployment/deploy-worker-bonding-facet.sh --prepare
+```
+
+The script refuses a selector owned by an unexpected facet. `--send` requires a
+clean reviewed commit, `CONFIRM=YES`, Base mainnet, and a Ledger or Trezor. It
+verifies deployed runtime bytecode. If the Diamond owner is a Safe or other
+contract, it stops after deployment and prints the target/value/calldata for an
+explicit Safe review; it does not attempt to bypass contract ownership. After
+execution, `--verify` requires the pre-cut `totalBonded` value and proves exact
+runtime bytecode, all selector routes, and preserved bond accounting:
+
+```bash
+EXPECTED_FACET=0x... EXPECTED_TOTAL_BONDED=0 \
+  ./scripts/deployment/deploy-worker-bonding-facet.sh --verify
+```
+
+The script deliberately does not grant `SLASHER_ROLE` or change the cooldown or
+minimum bond. Do not run `--send` until the contract PR, independent audit, Safe
+transaction, rollback/incident plan, and validator bond-sync design are approved.
+
 **Usage:**
 
 ```bash

@@ -10,6 +10,10 @@ Diamond so they exercise the production delegatecall + selector-routing + AppSto
 - `RewardPool.t.sol`, `DenReporter.t.sol`, `PaymentRouter.t.sol`, `BondReserve.t.sol`,
   `WorkerRegistryBonding.t.sol`,
   `ModelVaultDenMultiplier.t.sol` — facet-level tests for the value/settlement paths.
+- `WorkerRegistry.t.sol` additionally covers one-time worker enumeration and indexed reads;
+  `WorkerRegistryBonding.t.sol` covers cooldown, withdrawal, cancellation, role isolation,
+  exactly-once evidence IDs, partial/full slash accounting, and parameter bounds for the
+  undeployed candidate.
 - `GridCatalogV2.t.sol` — standalone catalog role, immutable-record, dependency,
   deactivation, NFT-approval, pause, and pagination invariants.
 - `GridCatalogV2.invariant.t.sol` — stateful adversarial checks for inventory uniqueness,

@@ -17,13 +17,14 @@ configuration runbook (bash, hardware-wallet signed).
     after the Safe cut. Its current purpose is the bond-principal reserve guard.
   - `configure-rewards.sh` — fund pool (`depositRewards`), set period allocation, grant
     `REPORTER_ROLE` to the settlement bot's hot wallet.
-  - `deploy-worker-bonding-facet.sh` — **NOT YET WRITTEN (do not deploy the WorkerRegistry
-    facet until it exists + is reviewed).** Will cut the WorkerRegistry upgrade (unbond
-    cooldown + slash — task in progress — plus the shipped dedup fix + new `getWorkerCount()`
-    view, selector `0x4d7599f1`). The diamondCut MUST **Replace** the currently-live WorkerRegistry
-    selectors (`registerWorker`,`unbond`,`getWorker`,`isWorkerActive`,`getTotalBonded`) AND **Add**
-    `getWorkerCount()` `0x4d7599f1` — a Replace-only cut would leave the new selector unrouted.
-    Verify the full selector set against the deployed facet before executing (one-way cut).
+  - `deploy-worker-bonding-facet.sh` — prepare-first runbook for the **undeployed**
+    WorkerRegistry candidate. Default `--prepare` builds/tests, derives and validates all 16
+    selectors, and reads the live routing without a transaction. `--send` requires explicit
+    confirmation, clean reviewed source, Base mainnet, and a hardware wallet; contract/Safe
+    ownership produces reviewable calldata instead of attempting the cut. `--verify` rebuilds
+    the clean reviewed source, matches exact runtime bytecode and every selector route, and
+    requires the pre-cut `totalBonded` value. It never grants `SLASHER_ROLE` or changes bond
+    parameters.
   - `deploy-denmultiplier-facet.sh`, `set-den-multipliers.sh` — ModelVault den-multiplier facet +
     its config.
   - `register-ace-step-recipe.sh` — prepares canonical Worker Profile V1 recipe bytes and
@@ -52,6 +53,9 @@ configuration runbook (bash, hardware-wallet signed).
 - Reward and worker-bond facets share one token custodian. Upgrade RewardPool and
   PaymentRouter atomically before enabling bonded workers; never deploy a bonding facet while
   live claims can treat `totalBonded` as reward liquidity.
+- WorkerRegistry cuts must replace every selector currently owned by the live WorkerRegistry
+  facet and add only previously unrouted selectors. Abort if any candidate selector belongs to
+  another facet. Preserve and compare `totalBonded` across the cut.
 - RecipeVault does not recompute `recipeRoot` from `workflowData`; registration scripts must
   canonicalize and verify the content digest before any hardware-wallet broadcast. A stored
   recipe is provenance data, not Core authorization; the signed profile allowlist is authoritative.
@@ -66,6 +70,8 @@ configuration runbook (bash, hardware-wallet signed).
 - `node --check scripts/catalog/canonicalize.mjs`
 - `shellcheck scripts/deployment/deploy-grid-catalog-v2.sh`
 - `shellcheck scripts/deployment/deploy-reward-facets.sh`
+- `bash -n scripts/deployment/deploy-worker-bonding-facet.sh`
+- `shellcheck scripts/deployment/deploy-worker-bonding-facet.sh`
 
 ## Child DOX Index
 

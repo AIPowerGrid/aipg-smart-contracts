@@ -34,7 +34,7 @@ The proxy currently exposes **12 module implementations**:
 | **ModelVault — admin updates** | `0xffFbEb80dBA87a7f9004757E55a581d6A988B839` | `updateBaseModel` / `updateModelMetadata` / `updateModelCapabilities`. Added 2026-02-02 (DiamondCut **Add**, tx `0xb3e1a36c…e32f7`). Lets the admin correct fields on already-registered models. |
 | RecipeVault | `0x58Dc9939FA30C6DE76776eCF24517721D53A9eA0` | ComfyUI workflow storage |
 | JobAnchor | `0x1aee3a3e4F2C05814d86cF2426Cf20Ed5c1bfa32` | Daily job anchoring |
-| WorkerRegistry | `0x0a3075b1787070210483d3e4845fE58d41c28438` | GPU worker registry |
+| WorkerRegistry | `0x0a3075b1787070210483d3e4845fE58d41c28438` | GPU worker registry. Live facet has immediate unbonding; the cooldown/slash/enumeration candidate in source is not deployed. |
 | RewardPool | `0x973a82955A3baC4d7d735330090FcE3FDB8E5082` | Period reward pool (deposit + allocation). Added 2026-06-15. |
 | DenReporter | `0xf06dEBc2556CeAc3caE09f934AC9aE9529760fd5` | Per-period den Merkle-root snapshots. Added 2026-06-15. |
 | PaymentRouter | `0x3fF26503539F3e85E136fDA20042Cf2B4E3Ac65A` | Merkle-proof worker payouts (claim/claimBatch). Added 2026-06-15. |

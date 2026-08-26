@@ -77,6 +77,9 @@ library GridStorage {
         uint256 registeredAt;
         bool isActive;
         bool isSlashed;
+        // APPEND-ONLY: 0 means no unbond is in progress. Existing mapping
+        // entries read zero from this previously-unused trailing slot.
+        uint256 unbondingAt;
     }
 
     struct DenReport {
@@ -161,6 +164,13 @@ library GridStorage {
         // pay more than its snapshotted poolAllocation, bounding a bad report's
         // blast radius to that one period's budget. Appended per the rule above.
         mapping(uint256 => uint256) paidPerPeriod;
+
+        // === WORKER UNBONDING COOLDOWN (added 2026-08) ===
+        // 0 selects WorkerRegistry.DEFAULT_UNBONDING_PERIOD. Append only.
+        uint256 unbondingPeriodSeconds;
+        // Finalized validator/governance evidence can authorize at most one
+        // slash transaction. Append only; zero is never a valid evidence ID.
+        mapping(bytes32 => bool) usedSlashEvidence;
     }
 
     // ============ STORAGE ACCESS ============
@@ -181,4 +191,5 @@ library GridStorage {
     bytes32 constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 constant REWARD_ADMIN_ROLE = keccak256("REWARD_ADMIN_ROLE");
     bytes32 constant REPORTER_ROLE = keccak256("REPORTER_ROLE");
+    bytes32 constant SLASHER_ROLE = keccak256("SLASHER_ROLE");
 }
