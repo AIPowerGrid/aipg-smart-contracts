@@ -6,7 +6,6 @@ import "../libraries/GridStorage.sol";
 interface IERC20RewardPool {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
     function transfer(address to, uint256 amount) external returns (bool);
-    function balanceOf(address account) external view returns (uint256);
 }
 
 /**
@@ -129,6 +128,10 @@ contract RewardPool {
     }
 
     function _poolBalance(GridStorage.AppStorage storage s) internal view returns (uint256) {
-        return IERC20RewardPool(s.aipgToken).balanceOf(address(this));
+        // The Diamond also custodies worker bonds. Exposing its raw ERC-20
+        // balance as spendable rewards would make bonded principal appear
+        // available to PaymentRouter. Direct token transfers are deliberately
+        // not credited; callers must use depositRewards().
+        return s.totalDeposited - s.totalPaidOut;
     }
 }

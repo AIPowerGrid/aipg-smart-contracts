@@ -7,7 +7,8 @@ Diamond so they exercise the production delegatecall + selector-routing + AppSto
 
 ## Ownership
 
-- `RewardPool.t.sol`, `DenReporter.t.sol`, `PaymentRouter.t.sol`, `WorkerRegistryBonding.t.sol`,
+- `RewardPool.t.sol`, `DenReporter.t.sol`, `PaymentRouter.t.sol`, `BondReserve.t.sol`,
+  `WorkerRegistryBonding.t.sol`,
   `ModelVaultDenMultiplier.t.sol` — facet-level tests for the value/settlement paths.
 - `GridCatalogV2.t.sol` — standalone catalog role, immutable-record, dependency,
   deactivation, NFT-approval, pause, and pagination invariants.
@@ -32,6 +33,8 @@ Diamond so they exercise the production delegatecall + selector-routing + AppSto
 
 - Every change to a value-handling facet must land with a passing test here; settlement math and
   exactly-once claim invariants are the priority to cover.
+- `BondReserve.t.sol` proves reward claims cannot consume worker principal and that
+  `aipgToken.balanceOf(diamond) >= getTotalBonded()` survives funded and underfunded claims.
 
 ## Verification
 
