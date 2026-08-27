@@ -121,22 +121,27 @@ The source being merged does not authorize a deployment. Rollout requires, in
 order:
 
 1. Independent contract and storage-layout review of the exact commit.
-2. `scripts/deployment/deploy-worker-bonding-facet.sh --prepare` against Base to
+2. Before any bond can be accepted, atomically replace RewardPool and
+   PaymentRouter using `scripts/deployment/deploy-reward-facets.sh`. Its
+   read-only `--prepare` proves complete legacy-selector coverage, snapshots
+   reward/bond accounting and the Grid token balance, and emits the exact
+   source/runtime/live-state anchors required by `--send` and `--verify`.
+3. `scripts/deployment/deploy-worker-bonding-facet.sh --prepare` against Base to
    build/test, validate all 16 selectors, classify each live route, prove every
    selector owned by the legacy facet is replaced, and snapshot the Grid, owner,
    old facet, source commit, runtime hash, and `totalBonded`. This mode signs and
    broadcasts nothing.
-3. Independent review of the facet bytecode and Safe transaction. `--send`
+4. Independent review of the facet bytecode and Safe transaction. `--send`
    requires a clean commit, Base chain 8453, `CONFIRM=YES`, a Ledger/Trezor, and
    exact reviewed values for every snapshot anchor emitted by `--prepare`.
    If the Diamond owner is a contract, it deploys the facet but only prints the
    owner transaction; it cannot execute the cut.
-4. Post-cut verification from the clean reviewed commit that deployed runtime
+5. Post-cut verification from the clean reviewed commit that deployed runtime
    bytecode matches exactly, every selector resolves to that facet, and
    `totalBonded` is unchanged from the required pre-cut snapshot.
-5. A finalized-block Core bond indexer using `getWorkerCount`, `getWorkerAt`, and
+6. A finalized-block Core bond indexer using `getWorkerCount`, `getWorkerAt`, and
    `getWorker`; reconciliation and reorg tests; and a monitored dark canary.
-6. A separate governance decision for a narrowly scoped slasher. The deployment
+7. A separate governance decision for a narrowly scoped slasher. The deployment
    script deliberately leaves `SLASHER_ROLE` ungranted.
 
 Do not combine the facet cut, role grant, Core eligibility change, and validator
