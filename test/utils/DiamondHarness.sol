@@ -12,6 +12,7 @@ import "../../contracts/grid/modules/WorkerRegistry.sol";
 import "../../contracts/grid/modules/RewardPool.sol";
 import "../../contracts/grid/modules/DenReporter.sol";
 import "../../contracts/grid/modules/PaymentRouter.sol";
+import "../../contracts/grid/modules/RecipeVault.sol";
 import "../../contracts/grid/libraries/GridStorage.sol";
 import "../../contracts/grid/interfaces/IModuleManager.sol";
 
@@ -36,6 +37,7 @@ abstract contract DiamondHarness is Test {
     address internal reporter = makeAddr("reporter");
     address internal pauser = makeAddr("pauser");
     address internal slasher = makeAddr("slasher");
+    address internal registrar = makeAddr("registrar");
     address internal user = makeAddr("user");
     address internal worker1 = makeAddr("worker1");
     address internal worker2 = makeAddr("worker2");
@@ -51,6 +53,7 @@ abstract contract DiamondHarness is Test {
     DenReporter internal reporterFacet;
     PaymentRouter internal payments;
     WorkerRegistry internal workerReg;
+    RecipeVault internal recipeVault;
 
     function setUp() public virtual {
         // Deploy mock token
@@ -65,10 +68,11 @@ abstract contract DiamondHarness is Test {
         RewardPool rp = new RewardPool();
         DenReporter dr = new DenReporter();
         PaymentRouter pr = new PaymentRouter();
+        RecipeVault rv = new RecipeVault();
 
         // Build the initial module cut. Each entry advertises which selectors
         // it serves.
-        IModuleManager.ModuleCut[] memory cut = new IModuleManager.ModuleCut[](8);
+        IModuleManager.ModuleCut[] memory cut = new IModuleManager.ModuleCut[](9);
         cut[0] = _cut(address(mm), _selectorsModuleManager());
         cut[1] = _cut(address(mi), _selectorsModuleInspector());
         cut[2] = _cut(address(own), _selectorsOwnership());
@@ -77,12 +81,10 @@ abstract contract DiamondHarness is Test {
         cut[5] = _cut(address(rp), _selectorsRewardPool());
         cut[6] = _cut(address(dr), _selectorsDenReporter());
         cut[7] = _cut(address(pr), _selectorsPaymentRouter());
+        cut[8] = _cut(address(rv), _selectorsRecipeVault());
 
-        Grid.GridArgs memory args = Grid.GridArgs({
-            owner: admin,
-            aipgToken: address(aipg),
-            stakingVault: address(0)
-        });
+        Grid.GridArgs memory args =
+            Grid.GridArgs({owner: admin, aipgToken: address(aipg), stakingVault: address(0)});
 
         // Deploy the Diamond with the initial cut applied in the constructor.
         Grid g = new Grid(cut, args);
@@ -103,6 +105,7 @@ abstract contract DiamondHarness is Test {
         reporterFacet = DenReporter(grid);
         payments = PaymentRouter(grid);
         workerReg = WorkerRegistry(grid);
+        recipeVault = RecipeVault(grid);
 
         // Wire the remaining roles via the public RoleManager surface to
         // exercise the production path.
@@ -111,6 +114,7 @@ abstract contract DiamondHarness is Test {
         roles.grantRole(GridStorage.REPORTER_ROLE, reporter);
         roles.grantRole(GridStorage.PAUSER_ROLE, pauser);
         roles.grantRole(GridStorage.SLASHER_ROLE, slasher);
+        roles.grantRole(GridStorage.REGISTRAR_ROLE, registrar);
         vm.stopPrank();
     }
 
@@ -199,15 +203,27 @@ abstract contract DiamondHarness is Test {
         s[3] = PaymentRouter.isClaimed.selector;
     }
 
+    function _selectorsRecipeVault() private pure returns (bytes4[] memory s) {
+        s = new bytes4[](10);
+        s[0] = RecipeVault.storeRecipe.selector;
+        s[1] = RecipeVault.updateRecipePermissions.selector;
+        s[2] = RecipeVault.setMaxWorkflowBytes.selector;
+        s[3] = RecipeVault.getRecipe.selector;
+        s[4] = RecipeVault.getRecipeByRoot.selector;
+        s[5] = RecipeVault.getCreatorRecipes.selector;
+        s[6] = RecipeVault.getTotalRecipes.selector;
+        s[7] = RecipeVault.getMaxWorkflowBytes.selector;
+        s[8] = RecipeVault.isRecipePublic.selector;
+        s[9] = RecipeVault.canRecipeCreateNFTs.selector;
+    }
+
     function _cut(address addr, bytes4[] memory sels)
         private
         pure
         returns (IModuleManager.ModuleCut memory)
     {
         return IModuleManager.ModuleCut({
-            moduleAddress: addr,
-            action: IModuleManager.ModuleAction.Add,
-            functionSelectors: sels
+            moduleAddress: addr, action: IModuleManager.ModuleAction.Add, functionSelectors: sels
         });
     }
 

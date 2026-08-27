@@ -30,6 +30,10 @@ configuration runbook (bash, hardware-wallet signed).
     parameters. The send path also requires the reviewed commit, runtime hash, Grid, owner,
     legacy facet, and `totalBonded` snapshot emitted by `--prepare`; it refuses any drift. The
     preflight reads every selector owned by the legacy facet and refuses a partial replacement.
+  - `deploy-recipe-governance-facet.sh` — prepare-first replacement of the live ten-selector
+    RecipeVault surface. It pins the clean commit/runtime/owner/legacy facet, commits to every
+    existing recipe's raw ABI state, refuses partial selector replacement, and verifies the
+    complete snapshot after the cut. It does not grant registrar authority or enable Core sync.
   - `deploy-denmultiplier-facet.sh`, `set-den-multipliers.sh` — ModelVault den-multiplier facet +
     its config.
   - `register-ace-step-recipe.sh` — prepares canonical Worker Profile V1 recipe bytes and
@@ -62,9 +66,10 @@ configuration runbook (bash, hardware-wallet signed).
   facet and add only previously unrouted selectors. Abort if any candidate selector belongs to
   another facet or any legacy selector is absent from the replacement plan. Preserve and compare
   `totalBonded` across the cut.
-- RecipeVault does not recompute `recipeRoot` from `workflowData`; registration scripts must
-  canonicalize and verify the content digest before any hardware-wallet broadcast. A stored
-  recipe is provenance data, not Core authorization; the signed profile allowlist is authoritative.
+- The live legacy RecipeVault does not recompute `recipeRoot`. The governed candidate does:
+  new records must be uncompressed exact bytes with `recipeRoot == sha256(workflowData)`, and
+  only `REGISTRAR_ROLE`/`ADMIN_ROLE` may submit them. Legacy records remain provenance only.
+  Core must still parse, bound, hash, and policy-check every public record before use.
 
 ## Work Guidance
 
@@ -78,6 +83,8 @@ configuration runbook (bash, hardware-wallet signed).
 - `shellcheck scripts/deployment/deploy-reward-facets.sh`
 - `bash -n scripts/deployment/deploy-worker-bonding-facet.sh`
 - `shellcheck scripts/deployment/deploy-worker-bonding-facet.sh`
+- `bash -n scripts/deployment/deploy-recipe-governance-facet.sh`
+- `shellcheck scripts/deployment/deploy-recipe-governance-facet.sh`
 
 ## Child DOX Index
 

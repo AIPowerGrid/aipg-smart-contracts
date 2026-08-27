@@ -83,6 +83,13 @@ jobs:
       - name: Check WorkerRegistry upgrade-test formatting
         run: forge fmt --check test/WorkerRegistryUpgrade.t.sol
 
+      - name: Check RecipeVault governance formatting
+        run: >
+          forge fmt --check
+          contracts/grid/modules/RecipeVault.sol
+          test/RecipeVaultGovernance.t.sol
+          test/RecipeVaultUpgrade.t.sol
+
       - name: Build contracts
         run: forge build --sizes
 
@@ -107,3 +114,5 @@ jobs:
           bash -n scripts/deployment/deploy-reward-facets.sh
           shellcheck scripts/deployment/deploy-worker-bonding-facet.sh
           bash -n scripts/deployment/deploy-worker-bonding-facet.sh
+          shellcheck scripts/deployment/deploy-recipe-governance-facet.sh
+          bash -n scripts/deployment/deploy-recipe-governance-facet.sh

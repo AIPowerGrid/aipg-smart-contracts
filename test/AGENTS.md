@@ -13,6 +13,11 @@ Diamond so they exercise the production delegatecall + selector-routing + AppSto
   upgrade test starts from the live six-selector legacy surface with a bonded worker, applies
   the reviewed replace/add cut, and proves routing, storage, enumeration, and cooldown behavior
   survive the transition.
+- `RecipeVaultGovernance.t.sol` proves only reviewed registrars/admins can publish exact
+  content-addressed recipe bytes or mutate permissions, while revoked and unrelated actors fail.
+- `RecipeVaultUpgrade.t.sol` starts from the live ten-selector permissionless surface with a
+  compressed legacy record, replaces every route, proves storage preservation, and confirms only
+  canonical registrar writes are accepted after the cut.
 - `WorkerRegistry.t.sol` additionally covers one-time worker enumeration and indexed reads;
   `WorkerRegistryBonding.t.sol` covers cooldown, withdrawal, cancellation, role isolation,
   pause-safe exits, exactly-once evidence IDs, partial/full slash accounting, and parameter
