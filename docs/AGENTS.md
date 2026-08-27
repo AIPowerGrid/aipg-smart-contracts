@@ -25,6 +25,8 @@ Grid modules, reward design, worker bonding, NFT plans, and deployment gates.
   off-chain bot readiness. Never label a rail live solely because facets exist.
 - Mainnet-mutating commands must exist, be reviewed, and have a dry-run/read-only
   verification step before documentation calls them deployable.
+- Worker bonding/slashing documentation must distinguish candidate source, facet deployment,
+  role grants, Core bond sync, and automated economic enforcement. None implies the next.
 - Do not publish private keys, signer infrastructure, private RPC credentials,
   or security-sensitive validator challenges.
 

@@ -23,10 +23,10 @@ and the reward/settlement economy.
   pairwise-hash convention the den settlement reuses.
 
 **Economy (reward/settlement)**
-- `WorkerRegistry.sol` — worker registration + bonding (stake AIPG) and `unbond`. Enforces
-  `minBondAmount`; pulls/returns AIPG via the token. The unbond-cooldown + slash upgrade
-  (see `docs/WORKER_BONDING.md`, `scripts/deployment/deploy-worker-bonding-facet.sh`) is not
-  yet cut into this facet — the live facet still returns the full bond on `unbond()`.
+- `WorkerRegistry.sol` — review candidate for worker registration, one-time enumeration,
+  bonded registration, two-step unbonding, and reviewed slashing. See
+  `docs/WORKER_BONDING.md`. This source is **not deployed**; the live facet still returns
+  the full bond on `unbond()` and does not expose the candidate's new selectors.
 - `RewardPool.sol` — custodies the AIPG that funds payouts; deposit + period-allocation +
   period-length config (admin-gated). Pool balance and payout rate are intentionally decoupled.
 - `DenReporter.sol` — trusted reporter commits per-period den snapshots as Merkle roots (leaves =
@@ -56,6 +56,12 @@ and the reward/settlement economy.
 - New economic logic → extend the relevant facet AND its test under `test/`; never add untested
   value paths.
 - New persistent fields → append to `GridStorage.AppStorage` (see grid AGENTS.md), never reorder.
+- Do not connect validator evidence directly to `slash()`. A separately reviewed governance or
+  operator action is required; the candidate intentionally grants no slasher during deployment,
+  and `ADMIN_ROLE` alone cannot slash.
+  Every slash must carry a nonzero finalized evidence ID, and the contract consumes each ID once.
+- A Grid pause blocks new registration and new unbond requests, but must not trap an already
+  cooling worker's principal: `cancelUnbond()` and matured `withdrawBond()` remain available.
 
 ## Verification
 
