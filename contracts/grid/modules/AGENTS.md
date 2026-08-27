@@ -57,8 +57,11 @@ and the reward/settlement economy.
   value paths.
 - New persistent fields → append to `GridStorage.AppStorage` (see grid AGENTS.md), never reorder.
 - Do not connect validator evidence directly to `slash()`. A separately reviewed governance or
-  operator action is required; the candidate intentionally grants no slasher during deployment.
+  operator action is required; the candidate intentionally grants no slasher during deployment,
+  and `ADMIN_ROLE` alone cannot slash.
   Every slash must carry a nonzero finalized evidence ID, and the contract consumes each ID once.
+- A Grid pause blocks new registration and new unbond requests, but must not trap an already
+  cooling worker's principal: `cancelUnbond()` and matured `withdrawBond()` remain available.
 
 ## Verification
 

@@ -202,17 +202,49 @@ contract WorkerRegistryBondingTest is DiamondHarness {
         assertEq(aipg.balanceOf(worker1), 0);
     }
 
-    function test_slash_onlySlasherOrAdmin() public {
+    function test_slash_onlyExplicitSlasher() public {
         _register(worker1, BOND);
 
         vm.prank(user);
         vm.expectRevert(bytes("WorkerRegistry: not slasher"));
         workerReg.slash(worker1, 1 ether, _evidence("nope"), "nope");
 
-        // admin also allowed
         vm.prank(admin);
-        workerReg.slash(worker1, 1 ether, _evidence("admin can"), "admin can");
+        vm.expectRevert(bytes("WorkerRegistry: not slasher"));
+        workerReg.slash(worker1, 1 ether, _evidence("admin cannot"), "admin cannot");
+
+        vm.prank(slasher);
+        workerReg.slash(worker1, 1 ether, _evidence("slasher can"), "slasher can");
         assertEq(workerReg.getTotalBonded(), BOND - 1 ether);
+    }
+
+    function test_pause_doesNotTrapMaturedBond() public {
+        _register(worker1, BOND);
+        vm.prank(worker1);
+        workerReg.unbond();
+
+        vm.prank(pauser);
+        roles.pause();
+        vm.warp(block.timestamp + 7 days);
+
+        vm.prank(worker1);
+        workerReg.withdrawBond();
+
+        assertEq(aipg.balanceOf(worker1), BOND);
+        assertEq(workerReg.getTotalBonded(), 0);
+    }
+
+    function test_pause_allowsCancellingExistingUnbond() public {
+        _register(worker1, BOND);
+        vm.prank(worker1);
+        workerReg.unbond();
+
+        vm.prank(pauser);
+        roles.pause();
+
+        vm.prank(worker1);
+        workerReg.cancelUnbond();
+        assertTrue(workerReg.isWorkerActive(worker1));
     }
 
     function test_slash_exceedsBondReverts() public {

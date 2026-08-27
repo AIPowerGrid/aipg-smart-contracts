@@ -41,11 +41,7 @@ contract WorkerRegistry {
 
     modifier onlySlasher() {
         GridStorage.AppStorage storage s = GridStorage.appStorage();
-        require(
-            s.roles[GridStorage.SLASHER_ROLE][msg.sender]
-                || s.roles[GridStorage.ADMIN_ROLE][msg.sender],
-            "WorkerRegistry: not slasher"
-        );
+        require(s.roles[GridStorage.SLASHER_ROLE][msg.sender], "WorkerRegistry: not slasher");
         _;
     }
 
@@ -102,7 +98,7 @@ contract WorkerRegistry {
         emit UnbondRequested(msg.sender, w.bondAmount, w.unbondingAt);
     }
 
-    function cancelUnbond() external notPaused {
+    function cancelUnbond() external {
         GridStorage.AppStorage storage s = GridStorage.appStorage();
         GridStorage.Worker storage w = s.workers[msg.sender];
         require(w.unbondingAt != 0, "WorkerRegistry: not unbonding");
@@ -115,7 +111,7 @@ contract WorkerRegistry {
         emit UnbondCancelled(msg.sender);
     }
 
-    function withdrawBond() external notPaused {
+    function withdrawBond() external {
         GridStorage.AppStorage storage s = GridStorage.appStorage();
         GridStorage.Worker storage w = s.workers[msg.sender];
         require(w.unbondingAt != 0, "WorkerRegistry: no unbond requested");

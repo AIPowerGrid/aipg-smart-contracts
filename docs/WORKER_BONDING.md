@@ -60,9 +60,9 @@ slot moves.
 |----------|----------|------|---------|
 | `registerWorker(uint256 bond)` | `0x86796f13` | worker | Lock bond, go active (reverts if a prior bond is still in cooldown) |
 | `unbond()` | `0x5df6a6bc` | worker | Start cooldown (no transfer) |
-| `cancelUnbond()` | `0xfe40c4bf` | worker | Abort unbond, return to active |
-| `withdrawBond()` | `0x66eb9cec` | worker | Return bond after cooldown |
-| `slash(address,uint256,bytes32,string)` | `0x773850c2` | SLASHER/ADMIN | Slash part/all of a bond against one finalized evidence ID |
+| `cancelUnbond()` | `0xfe40c4bf` | worker | Abort unbond, return to active; remains available while paused |
+| `withdrawBond()` | `0x66eb9cec` | worker | Return bond after cooldown; remains available while paused |
+| `slash(address,uint256,bytes32,string)` | `0x773850c2` | SLASHER | Slash part/all of a bond against one finalized evidence ID |
 | `setUnbondingPeriod(uint256)` | `0x114eaf55` | ADMIN | Set default (`0`) or 1–30 day cooldown |
 | `setMinBond(uint256)` | `0x6eaae824` | ADMIN | Set a nonzero minimum bond |
 | `unbondingPeriod() view` | `0x6cf6d675` | — | Effective cooldown |
@@ -83,6 +83,15 @@ bond is promoted to a full slash so an under-collateralized worker cannot remain
 in a limbo state. Fully slashed workers may later register with a new bond; their
 historical events and off-chain scorecard remain distinct from their current
 active state.
+
+`ADMIN_ROLE` cannot call `slash()` unless that address is separately granted
+`SLASHER_ROLE`. This makes an ungranted slasher role an effective dark-deployment
+gate rather than a documentation-only promise. Granting or revoking the role is
+an explicit, event-emitting governance transaction through `RoleManager`.
+
+A global Grid pause prevents new registrations and new unbond requests. It does
+not freeze an already-started exit: a worker may still cancel its cooldown or
+withdraw a matured bond while paused.
 
 ## Slash destination: the reward pool, by accounting
 
