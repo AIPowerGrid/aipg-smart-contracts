@@ -24,7 +24,9 @@ configuration runbook (bash, hardware-wallet signed).
     ownership produces reviewable calldata instead of attempting the cut. `--verify` rebuilds
     the clean reviewed source, matches exact runtime bytecode and every selector route, and
     requires the pre-cut `totalBonded` value. It never grants `SLASHER_ROLE` or changes bond
-    parameters.
+    parameters. The send path also requires the reviewed commit, runtime hash, Grid, owner,
+    legacy facet, and `totalBonded` snapshot emitted by `--prepare`; it refuses any drift. The
+    preflight reads every selector owned by the legacy facet and refuses a partial replacement.
   - `deploy-denmultiplier-facet.sh`, `set-den-multipliers.sh` — ModelVault den-multiplier facet +
     its config.
   - `register-ace-step-recipe.sh` — prepares canonical Worker Profile V1 recipe bytes and
@@ -55,7 +57,8 @@ configuration runbook (bash, hardware-wallet signed).
   live claims can treat `totalBonded` as reward liquidity.
 - WorkerRegistry cuts must replace every selector currently owned by the live WorkerRegistry
   facet and add only previously unrouted selectors. Abort if any candidate selector belongs to
-  another facet. Preserve and compare `totalBonded` across the cut.
+  another facet or any legacy selector is absent from the replacement plan. Preserve and compare
+  `totalBonded` across the cut.
 - RecipeVault does not recompute `recipeRoot` from `workflowData`; registration scripts must
   canonicalize and verify the content digest before any hardware-wallet broadcast. A stored
   recipe is provenance data, not Core authorization; the signed profile allowlist is authoritative.

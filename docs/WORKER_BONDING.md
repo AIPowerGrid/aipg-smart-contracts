@@ -122,10 +122,13 @@ order:
 
 1. Independent contract and storage-layout review of the exact commit.
 2. `scripts/deployment/deploy-worker-bonding-facet.sh --prepare` against Base to
-   build/test, validate all 16 selectors, classify each live route, and snapshot
-   `totalBonded`. This mode signs and broadcasts nothing.
+   build/test, validate all 16 selectors, classify each live route, prove every
+   selector owned by the legacy facet is replaced, and snapshot the Grid, owner,
+   old facet, source commit, runtime hash, and `totalBonded`. This mode signs and
+   broadcasts nothing.
 3. Independent review of the facet bytecode and Safe transaction. `--send`
-   requires a clean commit, Base chain 8453, `CONFIRM=YES`, and a Ledger/Trezor.
+   requires a clean commit, Base chain 8453, `CONFIRM=YES`, a Ledger/Trezor, and
+   exact reviewed values for every snapshot anchor emitted by `--prepare`.
    If the Diamond owner is a contract, it deploys the facet but only prints the
    owner transaction; it cannot execute the cut.
 4. Post-cut verification from the clean reviewed commit that deployed runtime

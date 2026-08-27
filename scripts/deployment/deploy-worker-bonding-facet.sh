@@ -7,6 +7,11 @@ GRID=${GRID:-0x79F39f2a0eA476f53994812e6a8f3C8CFe08c609}
 RPC=${RPC:-${BASE_RPC_URL:-https://mainnet.base.org}}
 HWFLAG=${HWFLAG:---ledger}
 CONFIRM=${CONFIRM:-}
+CONFIRM_GRID=${CONFIRM_GRID:-}
+REVIEWED_COMMIT=${REVIEWED_COMMIT:-}
+REVIEWED_RUNTIME_HASH=${REVIEWED_RUNTIME_HASH:-}
+EXPECTED_OWNER=${EXPECTED_OWNER:-}
+EXPECTED_OLD_FACET=${EXPECTED_OLD_FACET:-}
 MODE=prepare
 ZERO=0x0000000000000000000000000000000000000000
 CONTRACT=contracts/grid/modules/WorkerRegistry.sol:WorkerRegistry
@@ -63,8 +68,13 @@ Environment:
   GRID                 Grid Diamond address
   HWFLAG               --ledger (default) or --trezor
   CONFIRM=YES          required for --send
+  CONFIRM_GRID         exact Grid address reviewed for --send
+  REVIEWED_COMMIT      exact 40-character source commit reviewed for --send
+  REVIEWED_RUNTIME_HASH  exact keccak256 deployed-runtime hash reviewed for --send
+  EXPECTED_OWNER       exact pre-cut Diamond owner reviewed for --send
+  EXPECTED_OLD_FACET   exact pre-cut WorkerRegistry facet reviewed for --send
+  EXPECTED_TOTAL_BONDED  exact pre-cut decimal totalBonded reviewed for --send/--verify
   EXPECTED_FACET       required for --verify
-  EXPECTED_TOTAL_BONDED  pre-cut decimal getTotalBonded value; required for --verify
 
 This script does not grant SLASHER_ROLE or change bond parameters.
 EOF
@@ -99,8 +109,8 @@ rpc_read() {
       sleep $((attempt * 2))
     fi
   done
-  echo "RPC read failed after $attempt attempts: $*" >&2
-  echo "$output" >&2
+  # Never echo the full command: --rpc-url may contain provider credentials.
+  echo "RPC read failed after $attempt attempts (${1##*/} ${2:-request})" >&2
   return 1
 }
 
@@ -190,6 +200,17 @@ forge test
 
 echo "Validating source selectors..."
 METHODS_JSON=$(forge inspect "$CONTRACT" methodIdentifiers --json)
+METHOD_COUNT=$(METHODS_JSON="$METHODS_JSON" python3 - <<'PY'
+import json
+import os
+
+print(len(json.loads(os.environ["METHODS_JSON"])))
+PY
+)
+if [[ "$METHOD_COUNT" != "${#SIGNATURES[@]}" ]]; then
+  echo "WorkerRegistry exports $METHOD_COUNT methods; reviewed surface expects ${#SIGNATURES[@]}" >&2
+  exit 1
+fi
 for i in "${!SIGNATURES[@]}"; do
   signature=${SIGNATURES[$i]}
   expected=${EXPECTED_SELECTORS[$i]}
@@ -240,6 +261,45 @@ for i in "${!SIGNATURES[@]}"; do
   sleep 0.25
 done
 
+# A candidate-only loop is not enough: an unlisted selector could remain routed
+# to the legacy facet after the cut. Require every selector currently owned by
+# the live WorkerRegistry facet to appear in the REPLACE set.
+OLD_SELECTOR_RAW=$(rpc_read cast call "$GRID" 'moduleFunctionSelectors(address)(bytes4[])' \
+  "$OLD_FACET" --rpc-url "$RPC")
+OLD_SELECTORS=()
+while IFS= read -r selector; do
+  [[ -n "$selector" ]] && OLD_SELECTORS+=("$selector")
+done < <(OLD_SELECTOR_RAW="$OLD_SELECTOR_RAW" python3 - <<'PY'
+import os
+import re
+
+raw = os.environ["OLD_SELECTOR_RAW"]
+for selector in re.findall(r"0x[0-9a-fA-F]{8}", raw):
+    print(selector.lower())
+PY
+)
+if (( ${#OLD_SELECTORS[@]} == 0 )); then
+  echo "Live WorkerRegistry facet reported no selectors" >&2
+  exit 1
+fi
+for old_selector in "${OLD_SELECTORS[@]}"; do
+  found=0
+  for replacement in "${REPLACE[@]}"; do
+    if [[ "$(printf '%s' "$old_selector" | lower)" == "$(printf '%s' "$replacement" | lower)" ]]; then
+      found=1
+      break
+    fi
+  done
+  if [[ "$found" == 0 ]]; then
+    echo "Legacy facet owns unreviewed selector $old_selector; refusing partial replacement" >&2
+    exit 1
+  fi
+done
+if (( ${#OLD_SELECTORS[@]} != ${#REPLACE[@]} )); then
+  echo "Legacy selector count does not match replacement count" >&2
+  exit 1
+fi
+
 echo "Diamond owner:       $OWNER"
 echo "Current facet:       $OLD_FACET"
 echo "totalBonded snapshot: $TOTAL_BONDED_BEFORE"
@@ -251,13 +311,23 @@ else
   echo "Source state:        clean"
 fi
 echo "Compiler:            $(forge --version | head -n 1)"
-echo "Runtime hash:        $(forge inspect "$CONTRACT" deployedBytecode | cast keccak)"
+RUNTIME_HASH=$(forge inspect "$CONTRACT" deployedBytecode | cast keccak)
+echo "Runtime hash:        $RUNTIME_HASH"
+echo "Legacy selectors:    ${#OLD_SELECTORS[@]} (all covered by REPLACE)"
 
 if [[ "$MODE" == "prepare" ]]; then
   echo
   echo "Preparation complete. No transaction was signed or broadcast."
   echo "Commit the candidate, repeat --prepare from a clean tree, and independently review"
   echo "that exact commit and selector classification before --send."
+  echo
+  echo "Reviewed send anchors (public values; independently verify before use):"
+  echo "  CONFIRM_GRID=$GRID"
+  echo "  REVIEWED_COMMIT=$(git rev-parse HEAD)"
+  echo "  REVIEWED_RUNTIME_HASH=$RUNTIME_HASH"
+  echo "  EXPECTED_OWNER=$OWNER"
+  echo "  EXPECTED_OLD_FACET=$OLD_FACET"
+  echo "  EXPECTED_TOTAL_BONDED=${TOTAL_BONDED_BEFORE%% *}"
   exit 0
 fi
 
@@ -275,6 +345,34 @@ git submodule foreach --quiet 'test -z "$(git status --porcelain)"' || {
   echo "--send requires clean submodules" >&2
   exit 1
 }
+
+HEAD_COMMIT=$(git rev-parse HEAD)
+SNAPSHOT_BONDED=${TOTAL_BONDED_BEFORE%% *}
+if [[ "$(printf '%s' "$CONFIRM_GRID" | lower)" != "$(printf '%s' "$GRID" | lower)" ]]; then
+  echo "CONFIRM_GRID must match the reviewed Grid address" >&2
+  exit 1
+fi
+if [[ ! "$REVIEWED_COMMIT" =~ ^[0-9a-f]{40}$ || "$REVIEWED_COMMIT" != "$HEAD_COMMIT" ]]; then
+  echo "REVIEWED_COMMIT must match the exact clean source commit" >&2
+  exit 1
+fi
+if [[ ! "$REVIEWED_RUNTIME_HASH" =~ ^0x[0-9a-fA-F]{64}$ ]] \
+  || [[ "$(printf '%s' "$REVIEWED_RUNTIME_HASH" | lower)" != "$(printf '%s' "$RUNTIME_HASH" | lower)" ]]; then
+  echo "REVIEWED_RUNTIME_HASH must match the exact compiled runtime" >&2
+  exit 1
+fi
+if [[ "$(printf '%s' "$EXPECTED_OWNER" | lower)" != "$(printf '%s' "$OWNER" | lower)" ]]; then
+  echo "EXPECTED_OWNER no longer matches the Diamond owner" >&2
+  exit 1
+fi
+if [[ "$(printf '%s' "$EXPECTED_OLD_FACET" | lower)" != "$(printf '%s' "$OLD_FACET" | lower)" ]]; then
+  echo "EXPECTED_OLD_FACET no longer matches the live WorkerRegistry" >&2
+  exit 1
+fi
+if [[ ! "$EXPECTED_TOTAL_BONDED" =~ ^[0-9]+$ || "$EXPECTED_TOTAL_BONDED" != "$SNAPSHOT_BONDED" ]]; then
+  echo "EXPECTED_TOTAL_BONDED no longer matches the live pre-cut snapshot" >&2
+  exit 1
+fi
 
 echo "Deploying reviewed WorkerRegistry implementation with $HWFLAG..."
 DEPLOY_JSON=$(forge create "$CONTRACT" --rpc-url "$RPC" "$HWFLAG" --broadcast --json)

@@ -8,8 +8,11 @@ Diamond so they exercise the production delegatecall + selector-routing + AppSto
 ## Ownership
 
 - `RewardPool.t.sol`, `DenReporter.t.sol`, `PaymentRouter.t.sol`, `BondReserve.t.sol`,
-  `WorkerRegistryBonding.t.sol`,
-  `ModelVaultDenMultiplier.t.sol` — facet-level tests for the value/settlement paths.
+  `WorkerRegistryBonding.t.sol`, `WorkerRegistryUpgrade.t.sol`,
+  `ModelVaultDenMultiplier.t.sol` — facet-level tests for the value/settlement paths. The
+  upgrade test starts from the live six-selector legacy surface with a bonded worker, applies
+  the reviewed replace/add cut, and proves routing, storage, enumeration, and cooldown behavior
+  survive the transition.
 - `WorkerRegistry.t.sol` additionally covers one-time worker enumeration and indexed reads;
   `WorkerRegistryBonding.t.sol` covers cooldown, withdrawal, cancellation, role isolation,
   pause-safe exits, exactly-once evidence IDs, partial/full slash accounting, and parameter
