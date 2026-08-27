@@ -17,8 +17,10 @@ and the reward/settlement economy.
 **Registries**
 - `ModelVault.sol` — AI model registry (rich metadata: type, IPFS CID / download URL, vram,
   quant/format, capability flags, NSFW). REGISTRAR-gated. Mirrors off-chain ModelVault sync.
-- `RecipeVault.sol` — ComfyUI workflow/recipe storage on-chain (creator attribution, NFT/public
-  permission flags, `maxWorkflowBytes` cap).
+- `RecipeVault.sol` — registrar-governed ComfyUI workflow/recipe storage on-chain (creator
+  attribution, NFT/public permission flags, `maxWorkflowBytes` cap). New records are
+  uncompressed canonical bytes whose SHA-256 must equal `recipeRoot`; compressed legacy records
+  remain readable but are not authoritative governed recipes.
 - `JobAnchor.sol` — daily job-receipt anchoring as Merkle roots (root + totals per day); the
   pairwise-hash convention the den settlement reuses.
 

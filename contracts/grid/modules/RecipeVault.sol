@@ -12,16 +12,26 @@ contract RecipeVault {
     using GridStorage for GridStorage.AppStorage;
 
     // ============ EVENTS ============
-    
+
     event RecipeStored(uint256 indexed recipeId, bytes32 indexed recipeRoot, address creator);
     event RecipePermissionsUpdated(uint256 indexed recipeId, bool canCreateNFTs, bool isPublic);
     event MaxWorkflowBytesUpdated(uint256 oldMax, uint256 newMax);
 
     // ============ MODIFIERS ============
-    
+
     modifier onlyAdmin() {
         GridStorage.AppStorage storage s = GridStorage.appStorage();
         require(s.roles[GridStorage.ADMIN_ROLE][msg.sender], "RecipeVault: not admin");
+        _;
+    }
+
+    modifier onlyRegistrar() {
+        GridStorage.AppStorage storage s = GridStorage.appStorage();
+        require(
+            s.roles[GridStorage.REGISTRAR_ROLE][msg.sender]
+                || s.roles[GridStorage.ADMIN_ROLE][msg.sender],
+            "RecipeVault: not registrar"
+        );
         _;
     }
 
@@ -32,7 +42,7 @@ contract RecipeVault {
     }
 
     // ============ STORAGE ============
-    
+
     function storeRecipe(
         bytes32 recipeRoot,
         bytes calldata workflowData,
@@ -41,11 +51,17 @@ contract RecipeVault {
         uint8 compression,
         string calldata name,
         string calldata description
-    ) external notPaused returns (uint256 recipeId) {
+    ) external onlyRegistrar notPaused returns (uint256 recipeId) {
         GridStorage.AppStorage storage s = GridStorage.appStorage();
-        
+
         require(recipeRoot != bytes32(0), "RecipeVault: empty root");
         require(workflowData.length > 0, "RecipeVault: empty workflow");
+        // Governed v1 recipes use exact canonical JSON bytes. Compression would
+        // prevent the Diamond from proving that recipeRoot commits to the
+        // executable content, so compressed legacy records remain readable but
+        // no new compressed records are accepted through this facet.
+        require(compression == 0, "RecipeVault: compression unsupported");
+        require(recipeRoot == sha256(workflowData), "RecipeVault: root mismatch");
         require(
             s.maxWorkflowBytes == 0 || workflowData.length <= s.maxWorkflowBytes,
             "RecipeVault: workflow too large"
@@ -74,16 +90,19 @@ contract RecipeVault {
         emit RecipeStored(recipeId, recipeRoot, msg.sender);
     }
 
-    function updateRecipePermissions(
-        uint256 recipeId,
-        bool canCreateNFTs,
-        bool isPublic
-    ) external notPaused {
+    function updateRecipePermissions(uint256 recipeId, bool canCreateNFTs, bool isPublic)
+        external
+        onlyRegistrar
+        notPaused
+    {
         GridStorage.AppStorage storage s = GridStorage.appStorage();
         GridStorage.Recipe storage r = s.recipes[recipeId];
-        
+
         require(r.recipeRoot != bytes32(0), "RecipeVault: not found");
-        require(r.creator == msg.sender, "RecipeVault: not creator");
+        require(
+            r.creator == msg.sender || s.roles[GridStorage.ADMIN_ROLE][msg.sender],
+            "RecipeVault: not creator or admin"
+        );
 
         r.canCreateNFTs = canCreateNFTs;
         r.isPublic = isPublic;
@@ -92,7 +111,7 @@ contract RecipeVault {
     }
 
     // ============ ADMIN ============
-    
+
     function setMaxWorkflowBytes(uint256 _maxBytes) external onlyAdmin {
         GridStorage.AppStorage storage s = GridStorage.appStorage();
         uint256 oldMax = s.maxWorkflowBytes;
@@ -101,7 +120,7 @@ contract RecipeVault {
     }
 
     // ============ VIEWS ============
-    
+
     function getRecipe(uint256 recipeId) external view returns (GridStorage.Recipe memory) {
         GridStorage.AppStorage storage s = GridStorage.appStorage();
         return s.recipes[recipeId];
@@ -138,4 +157,3 @@ contract RecipeVault {
         return s.recipes[recipeId].canCreateNFTs;
     }
 }
-

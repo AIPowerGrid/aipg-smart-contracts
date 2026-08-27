@@ -39,3 +39,5 @@ logs/
 # Test outputs
 coverage/
 .nyc_output/
+__pycache__/
+*.py[cod]
