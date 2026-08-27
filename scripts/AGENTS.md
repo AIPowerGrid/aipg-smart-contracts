@@ -14,7 +14,10 @@ configuration runbook (bash, hardware-wallet signed).
 - **`deployment/`** — mainnet change runbook (run in order, admin hardware wallet):
   - `deploy-reward-facets.sh` — prepare-by-default atomic RewardPool + PaymentRouter
     replacement that preserves DenReporter and verifies reward/bond accounting before and
-    after the Safe cut. Its current purpose is the bond-principal reserve guard.
+    after the Safe cut. Its current purpose is the bond-principal reserve guard. The send path
+    requires the reviewed Grid, clean commit, both runtime hashes, owner, both legacy facets,
+    complete legacy-selector coverage, and the full accounting/token-balance snapshot emitted
+    by `--prepare`; post-cut verification requires the same reviewed source and snapshot.
   - `configure-rewards.sh` — fund pool (`depositRewards`), set period allocation, grant
     `REPORTER_ROLE` to the settlement bot's hot wallet.
   - `deploy-worker-bonding-facet.sh` — prepare-first runbook for the **undeployed**
