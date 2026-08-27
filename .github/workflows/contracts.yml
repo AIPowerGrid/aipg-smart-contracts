@@ -80,6 +80,9 @@ jobs:
           test/GridCatalogV2.t.sol
           test/GridCatalogV2.invariant.t.sol
 
+      - name: Check WorkerRegistry upgrade-test formatting
+        run: forge fmt --check test/WorkerRegistryUpgrade.t.sol
+
       - name: Build contracts
         run: forge build --sizes
 
@@ -100,3 +103,7 @@ jobs:
           node --check scripts/catalog/canonicalize.mjs
           shellcheck scripts/deployment/deploy-grid-catalog-v2.sh
           bash -n scripts/deployment/deploy-grid-catalog-v2.sh
+          shellcheck scripts/deployment/deploy-reward-facets.sh
+          bash -n scripts/deployment/deploy-reward-facets.sh
+          shellcheck scripts/deployment/deploy-worker-bonding-facet.sh
+          bash -n scripts/deployment/deploy-worker-bonding-facet.sh
